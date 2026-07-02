@@ -6,6 +6,7 @@ import {
   BookOpen,
   Bookmark,
   Bot,
+  Camera,
   ChevronRight,
   CheckCircle2,
   Eye,
@@ -22,6 +23,7 @@ import {
   LockKeyhole,
   Mail,
   MessageCircle,
+  MoreHorizontal,
   Newspaper,
   PencilLine,
   PlayCircle,
@@ -5127,6 +5129,14 @@ function DoctorVerificationPage() {
         <p>면허 정보와 증빙 자료를 제출하면 운영자가 검수한 뒤 전문가 뱃지를 부여합니다.</p>
       </div>
 
+      <div className="doctor-verification-banner">
+        <ShieldCheck size={18} aria-hidden="true" />
+        <p>
+          면허 정보를 인증하면 <strong>전문가 뱃지</strong>가 부여되어 더 많은 사용자에게
+          노출됩니다.
+        </p>
+      </div>
+
       {successMessage ? (
         <p className="verification-result approved" role="status">
           {successMessage}
@@ -5199,16 +5209,22 @@ function DoctorVerificationPage() {
                 value={specialty}
               />
             </label>
-            <label>
+            <label className="doctor-verification-file">
               증빙 파일
-              <input
-                accept="application/pdf,image/*"
-                onChange={(event) => {
-                  setProofFilename(event.target.files?.[0]?.name ?? "");
-                  setError("");
-                }}
-                type="file"
-              />
+              <span className="doctor-verification-dropzone">
+                <Camera size={24} aria-hidden="true" />
+                <strong>파일을 선택하거나 드래그하세요.</strong>
+                <small>jpg, png, pdf · 최대 5MB</small>
+                <input
+                  accept="application/pdf,image/*"
+                  aria-label="증빙 파일"
+                  onChange={(event) => {
+                    setProofFilename(event.target.files?.[0]?.name ?? "");
+                    setError("");
+                  }}
+                  type="file"
+                />
+              </span>
             </label>
             {proofFilename ? <p className="public-inline-status">{proofFilename}</p> : null}
             {error ? <p className="form-error">{error}</p> : null}
@@ -5221,6 +5237,11 @@ function DoctorVerificationPage() {
               <ShieldCheck size={18} aria-hidden="true" />
               {application?.status === "rejected" ? "재신청 제출" : "인증 신청 제출"}
             </button>
+            <p className="doctor-verification-privacy">
+              <AlertCircle size={15} aria-hidden="true" />
+              개인정보 보호를 위해 주민등록번호, 전화번호 등 민감한 정보는 가려서 제출해
+              주세요. 업로드된 자료는 인증 완료 후 안전하게 폐기됩니다.
+            </p>
           </form>
         ) : (
           <div className="verification-locked-note">
@@ -6415,13 +6436,17 @@ function MyPage() {
 
   return (
     <section className="public-mypage scr-010-screen" aria-labelledby="scr-010-title">
-      <header className="public-page-header compact scr-010-header">
-        <span className="public-eyebrow">
-          <UserRound size={16} aria-hidden="true" />
-          My Page
-        </span>
-        <h1 id="scr-010-title">마이페이지</h1>
-        <p>내 프로필, 활동, 저장한 의료진, 계정 설정을 한곳에서 관리합니다.</p>
+      <header className="scr-010-appbar">
+        <div className="scr-010-appbar-title">
+          <h1 id="scr-010-title">마이페이지</h1>
+          <span className="scr-010-appbar-badge">
+            <ShieldCheck size={13} aria-hidden="true" />
+            의사 인증
+          </span>
+        </div>
+        <button className="scr-010-appbar-more" type="button" aria-label="더보기">
+          <MoreHorizontal size={20} aria-hidden="true" />
+        </button>
       </header>
 
       <div className="scr-010-state-switcher" aria-label="마이페이지 상태">
@@ -6498,22 +6523,74 @@ function MyPage() {
             data-testid="scr-010-fld-01"
             aria-labelledby="scr-010-profile-title"
           >
-            <div className="scr-010-profile-main">
-              <div className="scr-010-avatar" aria-hidden="true">
-                코
+            <div className="scr-010-avatar-block">
+              <span className="scr-010-avatar-wrap">
+                <span className="scr-010-avatar" aria-hidden="true">
+                  코
+                </span>
+                <span className="scr-010-avatar-cam" aria-hidden="true">
+                  <Camera size={14} />
+                </span>
+                <span className="scr-010-avatar-verified" aria-hidden="true">
+                  <CheckCircle2 size={20} />
+                </span>
+              </span>
+              <h2 id="scr-010-profile-title">{myPageProfile.email}</h2>
+            </div>
+
+            <label className="scr-010-field scr-010-nickname">
+              <span>
+                닉네임 <em aria-hidden="true">*</em>
+              </span>
+              <div className="scr-010-field-control">
+                <input
+                  maxLength={10}
+                  minLength={2}
+                  onChange={(event) => setNickname(event.target.value)}
+                  value={nickname}
+                />
+                <button
+                  className="scr-010-field-check"
+                  onClick={() => setStatusMessage("닉네임이 저장되었습니다.")}
+                  type="button"
+                  aria-label="닉네임 저장"
+                >
+                  <CheckCircle2 size={22} aria-hidden="true" />
+                </button>
               </div>
-              <div className="scr-010-profile-copy">
-                <h2 id="scr-010-profile-title">{myPageProfile.name}</h2>
-                <p>
-                  {myPageProfile.email}
-                  <span>
-                    <ShieldCheck size={14} aria-hidden="true" />
-                    의사 인증
-                  </span>
-                </p>
+              <small>최소 2자, 최대 10자 (한글, 영문, 숫자, 밑줄(_)만 가능)</small>
+            </label>
+
+            <div className="scr-010-doctor-card">
+              <div className="scr-010-doctor-row">
+                <span>실명</span>
+                <strong>{myPageProfile.realName}</strong>
               </div>
+              <div className="scr-010-doctor-row">
+                <span>소속 병원</span>
+                <strong>{myPageProfile.organization}</strong>
+              </div>
+              <div className="scr-010-doctor-row">
+                <span>전문 분야</span>
+                <strong>{myPageProfile.specialty}</strong>
+              </div>
+              <div className="scr-010-doctor-row">
+                <span>인증 상태</span>
+                <strong className="scr-010-doctor-status">{verificationStatusLabel}</strong>
+              </div>
+            </div>
+
+            <div className="scr-010-profile-actions">
               <button
-                className="public-ghost-button scr-010-profile-action"
+                className="scr-010-lock-note"
+                onClick={() => navigate("/doctor-verification")}
+                type="button"
+              >
+                <ShieldCheck size={15} aria-hidden="true" />
+                인증 신청/상태 보기
+              </button>
+              <button
+                className="public-primary-button scr-010-profile-action"
                 data-testid="scr-010-act-01"
                 onClick={() => setStatusMessage("의사 프로필 수정 화면을 열었습니다.")}
                 type="button"
@@ -6522,52 +6599,6 @@ function MyPage() {
                 의사 프로필 수정
               </button>
             </div>
-
-            <div className="scr-010-verified-card">
-              <div>
-                <span>실명</span>
-                <strong>{myPageProfile.realName}</strong>
-              </div>
-              <div>
-                <span>소속</span>
-                <strong>{myPageProfile.organization}</strong>
-              </div>
-              <div>
-                <span>전문</span>
-                <strong>{myPageProfile.specialty}</strong>
-              </div>
-              <div>
-                <span>면허 인증</span>
-                <strong>{verificationStatusLabel}</strong>
-              </div>
-              <button
-                className="scr-010-lock-note"
-                onClick={() => navigate("/doctor-verification")}
-                type="button"
-              >
-                <ShieldCheck size={14} aria-hidden="true" />
-                인증 신청/상태 보기
-              </button>
-            </div>
-
-            <label className="scr-010-nickname">
-              <span>닉네임</span>
-              <div>
-                <input
-                  maxLength={10}
-                  minLength={2}
-                  onChange={(event) => setNickname(event.target.value)}
-                  value={nickname}
-                />
-                <button
-                  className="public-ghost-button"
-                  onClick={() => setStatusMessage("닉네임이 저장되었습니다.")}
-                  type="button"
-                >
-                  저장
-                </button>
-              </div>
-            </label>
           </section>
 
           <section
@@ -6598,31 +6629,62 @@ function MyPage() {
             </div>
 
             {screenState === "empty" ? (
-              <div className="scr-010-empty-state">게시글이 없습니다</div>
+              <div className="scr-010-empty-state">
+                <span className="scr-010-empty-hearts" aria-hidden="true">
+                  <Heart size={30} className="scr-010-empty-heart back" />
+                  <Heart size={26} className="scr-010-empty-heart front" />
+                </span>
+                게시글이 없습니다
+              </div>
             ) : null}
 
             {screenState === "default" && activeTab === "posts" ? (
               <div className="scr-010-activity-list">
-                {myPagePosts.map((post) => (
-                  <article
-                    className={post.removed ? "scr-010-activity-card muted" : "scr-010-activity-card"}
-                    key={post.title}
-                  >
-                    {post.removed ? (
+                {myPagePosts.map((post) => {
+                  const [postCategory, postDate] = post.meta.split(" · ");
+                  const postStats = post.stats.match(/\d+/g) ?? [];
+
+                  return post.removed ? (
+                    <article className="scr-010-post-card removed" key={post.title}>
                       <div className="scr-010-policy-note">
-                        <AlertCircle size={16} aria-hidden="true" />
-                        <span>{post.title}</span>
+                        <AlertCircle size={17} aria-hidden="true" />
+                        <div>
+                          <strong>{post.title}</strong>
+                          <span>{post.description}</span>
+                        </div>
                       </div>
-                    ) : (
-                      <strong>{post.title}</strong>
-                    )}
-                    <p>{post.description}</p>
-                    <div>
-                      <span>{post.meta}</span>
-                      <span>{post.stats}</span>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ) : (
+                    <article className="scr-010-post-card" key={post.title}>
+                      <div className="scr-010-post-top">
+                        <span className="scr-010-cat-chip">{postCategory}</span>
+                        <span className="scr-010-post-date">{postDate}</span>
+                        <button
+                          className="scr-010-post-del"
+                          onClick={() => setStatusMessage(`${postCategory} 게시글을 삭제했습니다.`)}
+                          type="button"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                      <p>{post.title}</p>
+                      <div className="scr-010-post-stats">
+                        <span>
+                          <Eye size={15} aria-hidden="true" />
+                          {postStats[0] ?? 0}
+                        </span>
+                        <span>
+                          <MessageCircle size={15} aria-hidden="true" />
+                          {postStats[1] ?? 0}
+                        </span>
+                        <span>
+                          <Heart size={15} aria-hidden="true" />
+                          {postStats[2] ?? 0}
+                        </span>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : null}
 
