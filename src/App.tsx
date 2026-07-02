@@ -3123,9 +3123,13 @@ function PublicLoginPage() {
         </header>
 
         <div className="public-login-intro">
-          <span className="public-login-mark" aria-hidden="true">
-            A
-          </span>
+          <img
+            className="public-login-logo"
+            src="/aiga-hero-logo.png"
+            width={72}
+            height={72}
+            alt="AIGA"
+          />
           <h1>AIGA에 오신 것을 환영합니다</h1>
           <p>이메일 또는 소셜 계정으로 로그인하세요</p>
         </div>
@@ -5350,6 +5354,13 @@ function SignupPage() {
 
       <div className="signup-body">
         <div className="signup-intro">
+          <img
+            className="signup-logo"
+            src="/aiga-hero-logo.png"
+            width={56}
+            height={56}
+            alt="AIGA"
+          />
           <h1 id="signup-title">계정을 만들어보세요</h1>
           <p>몇 가지 정보만 입력하면 시작할 수 있어요.</p>
         </div>

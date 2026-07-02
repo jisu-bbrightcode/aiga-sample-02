@@ -3731,14 +3731,17 @@ button {
 }
 
 .signup-screen {
-  background: #fbfaf7;
+  background:
+    radial-gradient(120% 60% at 12% 0%, rgba(0, 202, 128, 0.12), transparent 48%),
+    radial-gradient(130% 70% at 92% 0%, rgba(55, 116, 232, 0.16), transparent 52%),
+    var(--gray-50);
   min-height: calc(100vh - 72px);
 }
 
 .signup-mobile-header {
   align-items: center;
   background: rgba(255, 255, 255, 0.96);
-  border-bottom: 1px solid #e3e7e2;
+  border-bottom: 1px solid var(--gray-100);
   display: flex;
   gap: 10px;
   min-height: 50px;
@@ -3759,17 +3762,33 @@ button {
   padding: 26px 20px 56px;
 }
 
+.signup-intro {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+}
+
+.signup-logo {
+  border-radius: 18px;
+  display: block;
+  height: 56px;
+  margin-bottom: 4px;
+  width: 56px;
+}
+
 .signup-intro h1 {
-  color: #17202a;
-  font-size: 1.85rem;
-  line-height: 1.15;
+  color: var(--gray-950);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
   margin: 0;
 }
 
 .signup-intro p,
 .signup-state-row p,
 .signup-login-link {
-  color: #5d6975;
+  color: var(--gray-500);
   line-height: 1.55;
 }
 
@@ -3780,14 +3799,14 @@ button {
 .signup-state-row,
 .signup-alert,
 .signup-success {
-  border-radius: 8px;
+  border-radius: 12px;
   margin-top: 18px;
   padding: 13px 14px;
 }
 
 .signup-state-row {
-  background: #f1f6f4;
-  border: 1px solid #d6e0dc;
+  background: var(--primary-25);
+  border: 1px solid var(--primary-100);
 }
 
 .signup-state-row span {
@@ -3824,9 +3843,14 @@ button {
 }
 
 .signup-form {
+  background: #ffffff;
+  border: 1px solid var(--gray-150);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(33, 91, 181, 0.10);
   display: grid;
   gap: 16px;
   margin-top: 20px;
+  padding: 22px 20px;
 }
 
 .signup-field {
@@ -3836,24 +3860,25 @@ button {
 
 .signup-field label,
 .signup-agreements legend {
-  color: #27333f;
+  color: var(--gray-700);
   font-size: 0.9rem;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .signup-field input {
   background: #ffffff;
-  border: 1px solid #cfd9d5;
-  border-radius: 8px;
-  min-height: 46px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  color: var(--gray-900);
+  min-height: 48px;
   outline: 0;
-  padding: 0 13px;
+  padding: 0 14px;
   width: 100%;
 }
 
 .signup-field input:focus {
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(31, 111, 104, 0.14);
+  box-shadow: 0 0 0 3px rgba(55, 116, 232, 0.16);
 }
 
 .signup-field input[aria-invalid="true"] {
@@ -3867,9 +3892,9 @@ button {
 }
 
 .signup-agreements {
-  background: #ffffff;
-  border: 1px solid #d8dfdc;
-  border-radius: 8px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-150);
+  border-radius: 14px;
   display: grid;
   gap: 10px;
   margin: 0;
@@ -3887,7 +3912,7 @@ button {
 }
 
 .signup-check.all {
-  border-bottom: 1px solid #e7ece9;
+  border-bottom: 1px solid var(--gray-200);
   padding-bottom: 11px;
 }
 
@@ -3899,12 +3924,14 @@ button {
 }
 
 .signup-check span {
-  color: #293642;
+  color: var(--gray-700);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .signup-submit {
+  border-radius: 12px;
+  min-height: 48px;
   width: 100%;
 }
 
@@ -6027,8 +6054,10 @@ button {
 .public-login-screen {
   align-items: center;
   background:
-    linear-gradient(160deg, rgba(31, 111, 104, 0.13), transparent 38%),
-    #eef5f4;
+    radial-gradient(120% 80% at 12% 4%, rgba(0, 202, 128, 0.16), transparent 52%),
+    radial-gradient(130% 90% at 90% 2%, rgba(55, 116, 232, 0.20), transparent 55%),
+    radial-gradient(150% 100% at 60% 0%, rgba(175, 212, 255, 0.28), transparent 60%),
+    var(--gray-50);
   display: flex;
   justify-content: center;
   min-height: 100vh;
@@ -6037,9 +6066,9 @@ button {
 
 .public-login-panel {
   background: #ffffff;
-  border: 1px solid #d6e1dd;
-  border-radius: 8px;
-  box-shadow: 0 22px 58px rgba(29, 45, 53, 0.12);
+  border: 1px solid var(--gray-150);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(33, 91, 181, 0.12);
   display: flex;
   flex-direction: column;
   min-height: min(760px, calc(100vh - 48px));
@@ -6054,7 +6083,7 @@ button {
 
 .public-login-header {
   align-items: center;
-  border-bottom: 1px solid #e3ebe8;
+  border-bottom: 1px solid var(--gray-100);
   display: flex;
   gap: 10px;
   margin: 0 -24px;
@@ -6065,10 +6094,10 @@ button {
 .public-login-back,
 .public-login-toggle {
   align-items: center;
-  background: #f4f7f6;
-  border: 1px solid #d9e2df;
-  border-radius: 8px;
-  color: #253844;
+  background: var(--gray-75);
+  border: 1px solid var(--gray-150);
+  border-radius: 10px;
+  color: var(--gray-700);
   display: inline-flex;
   justify-content: center;
 }
@@ -6086,25 +6115,20 @@ button {
   text-align: center;
 }
 
-.public-login-mark {
-  align-items: center;
-  background: var(--primary-500);
-  border-radius: 8px;
-  color: #ffffff;
-  display: inline-flex;
-  font-size: 1.45rem;
-  font-weight: 900;
-  height: 64px;
-  justify-content: center;
+.public-login-logo {
+  border-radius: 20px;
+  display: block;
+  height: 72px;
   margin-bottom: 16px;
-  width: 64px;
+  width: 72px;
 }
 
 .public-login-intro h1,
 .public-login-state-card h1 {
-  color: #17202a;
-  font-size: 1.65rem;
-  line-height: 1.18;
+  color: var(--gray-950);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
   margin: 0;
   text-align: center;
 }
@@ -6112,7 +6136,7 @@ button {
 .public-login-intro p,
 .public-login-state-card p,
 .public-login-signup {
-  color: #5c6b75;
+  color: var(--gray-500);
   line-height: 1.55;
 }
 
@@ -6182,14 +6206,14 @@ button {
 .public-login-input {
   align-items: center;
   background: #ffffff;
-  border: 1px solid #cfd9d5;
-  border-radius: 8px;
-  color: #60707a;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  color: var(--gray-450);
   display: grid;
   gap: 8px;
   grid-template-columns: auto minmax(0, 1fr);
-  min-height: 46px;
-  padding: 0 12px;
+  min-height: 48px;
+  padding: 0 14px;
 }
 
 .public-login-input.with-action {
@@ -6199,12 +6223,12 @@ button {
 
 .public-login-input:focus-within {
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(31, 111, 104, 0.14);
+  box-shadow: 0 0 0 3px rgba(55, 116, 232, 0.16);
 }
 
 .public-login-input input {
   border: 0;
-  color: #17202a;
+  color: var(--gray-900);
   min-height: 42px;
   min-width: 0;
   outline: 0;
@@ -6218,7 +6242,8 @@ button {
 }
 
 .public-login-submit {
-  min-height: 46px;
+  border-radius: 12px;
+  min-height: 48px;
   width: 100%;
 }
 
@@ -6241,7 +6266,7 @@ button {
 
 .public-login-divider::before,
 .public-login-divider::after {
-  background: #e1e8e5;
+  background: var(--gray-150);
   content: "";
   height: 1px;
 }
@@ -6254,12 +6279,12 @@ button {
 .public-social-button {
   align-items: center;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   display: inline-flex;
-  font-weight: 900;
+  font-weight: 700;
   gap: 9px;
   justify-content: center;
-  min-height: 44px;
+  min-height: 46px;
   padding: 0 14px;
 }
 
@@ -6285,8 +6310,8 @@ button {
 
 .public-social-button.google {
   background: #ffffff;
-  border-color: #cfd9d5;
-  color: #21313f;
+  border-color: var(--gray-200);
+  color: var(--gray-800);
 }
 
 .public-login-signup {
@@ -6320,7 +6345,7 @@ button {
 }
 
 .public-login-kicker {
-  color: #8b3f3f;
+  color: var(--primary-600);
   font-size: 0.78rem;
   font-weight: 900;
   margin: 0;
