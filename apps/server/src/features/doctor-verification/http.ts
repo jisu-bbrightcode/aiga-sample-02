@@ -29,6 +29,7 @@ import {
   type DrizzleDb,
 } from './drizzle-repository.js';
 import { doctorMembershipFactory } from './membership.service.js';
+import { createProofRetentionService } from './retention-job.js';
 import { DoctorVerificationService } from './service.js';
 
 const systemClock = { now: () => new Date() };
@@ -114,6 +115,21 @@ export function createDoctorVerificationRouter(deps: DoctorVerificationRouterDep
     requireAdmin(),
     requirePermission(PERMISSIONS.adminUsersUpdate),
     send(controller.adminReject),
+  );
+
+  // --- Retention purge (BBR-1167) ---
+  // Ops/scheduler endpoint: deletes proof blobs + clears `proof_documents` for
+  // terminal applications past the retention window. Safe to invoke repeatedly
+  // (idempotent), so a Vercel Cron entry can simply POST here on a schedule.
+  const retention = createProofRetentionService(db);
+  router.post(
+    '/admin/doctor-verification/retention/purge',
+    requireAdmin(),
+    requirePermission(PERMISSIONS.adminUsersUpdate),
+    asyncHandler(async (_req, res) => {
+      const summary = await retention.purgeAgedTerminalApplications();
+      res.status(200).json({ ok: true, data: summary });
+    }),
   );
 
   return router;

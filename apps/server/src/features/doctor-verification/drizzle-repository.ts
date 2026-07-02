@@ -5,7 +5,7 @@
  * pin a specific driver — the base (BBR-1117) supplies the concrete
  * `drizzle(...)` instance. When wiring, pass that instance in.
  */
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, lte, sql } from 'drizzle-orm';
 import {
   doctorVerificationApplications as apps,
   doctorVerificationEvents as events,
@@ -48,6 +48,7 @@ const toApplication = (row: DoctorVerificationApplicationRow): VerificationAppli
   rejectionReason: row.rejectionReason ?? null,
   reviewedByAdminId: row.reviewedByAdminId ?? null,
   reviewedAt: row.reviewedAt ?? null,
+  proofPurgedAt: row.proofPurgedAt ?? null,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
@@ -161,6 +162,44 @@ export class DrizzleDoctorVerificationRepository implements DoctorVerificationRe
       note: row.note ?? null,
       createdAt: row.createdAt,
     };
+  }
+
+  async findProofPurgeCandidates(
+    reviewedBefore: Date,
+    limit: number,
+  ): Promise<ReadonlyArray<VerificationApplication>> {
+    const rows = await this.db
+      .select()
+      .from(apps)
+      .where(
+        and(
+          inArray(apps.status, ['approved', 'rejected']),
+          isNull(apps.proofPurgedAt),
+          lte(apps.reviewedAt, reviewedBefore),
+          // Skip rows whose proof array is already empty (nothing to delete).
+          sql`jsonb_array_length(${apps.proofDocuments}) > 0`,
+        ),
+      )
+      .orderBy(asc(apps.reviewedAt))
+      .limit(limit);
+    return rows.map(toApplication);
+  }
+
+  async listProofKeysByApplicant(applicantId: string): Promise<ReadonlyArray<string>> {
+    const rows = await this.db
+      .select({ proofDocuments: apps.proofDocuments })
+      .from(apps)
+      .where(and(eq(apps.applicantId, applicantId), isNull(apps.proofPurgedAt)));
+    return rows.flatMap((row: { proofDocuments: unknown }) =>
+      ((row.proofDocuments as ProofDocumentRef[] | null) ?? []).map((doc) => doc.key),
+    );
+  }
+
+  async clearProofDocuments(id: string, purgedAt: Date): Promise<void> {
+    await this.db
+      .update(apps)
+      .set({ proofDocuments: [] as unknown, proofPurgedAt: purgedAt, updatedAt: purgedAt })
+      .where(and(eq(apps.id, id), isNull(apps.proofPurgedAt)));
   }
 }
 

@@ -23,6 +23,7 @@ const appWith = (status: VerificationStatus): VerificationApplication => ({
   rejectionReason: status === 'rejected' ? 'blurry scan' : null,
   reviewedByAdminId: status === 'pending' ? null : 'admin-1',
   reviewedAt: status === 'pending' ? null : new Date(),
+  proofPurgedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 });

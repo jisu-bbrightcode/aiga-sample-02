@@ -49,6 +49,33 @@ export interface DoctorVerificationRepository {
     reviewedAt: Date,
   ): Promise<VerificationApplication>;
   recordEvent(data: RecordEventData): Promise<VerificationEvent>;
+
+  // --- Retention (BBR-1167) ---
+
+  /**
+   * Terminal applications (approved/rejected) whose proof documents are still
+   * retained (`proofPurgedAt IS NULL`, non-empty `proofDocuments`) and whose
+   * `reviewedAt` is at or before `reviewedBefore`. Ordered oldest-first and
+   * capped at `limit` so the purge job can page through in bounded batches.
+   */
+  findProofPurgeCandidates(
+    reviewedBefore: Date,
+    limit: number,
+  ): Promise<ReadonlyArray<VerificationApplication>>;
+
+  /**
+   * Blob keys for every proof document belonging to an applicant across all
+   * their applications (used by the account-deletion / erasure hook, before the
+   * rows themselves cascade-delete). Excludes already-purged rows.
+   */
+  listProofKeysByApplicant(applicantId: string): Promise<ReadonlyArray<string>>;
+
+  /**
+   * Clear `proofDocuments` to `[]` and stamp `proofPurgedAt`. Idempotent: a row
+   * already purged is left unchanged. Called only after the blob objects have
+   * been deleted so a crash mid-purge is retried on the next run.
+   */
+  clearProofDocuments(id: string, purgedAt: Date): Promise<void>;
 }
 
 /**
@@ -94,3 +121,18 @@ export interface Clock {
 export interface IdGenerator {
   next(): string;
 }
+
+/**
+ * Blob object storage for proof documents (Vercel Blob). This feature only ever
+ * *deletes* blobs (uploads happen client-side against a signed URL), so the port
+ * is intentionally minimal. The concrete adapter lives in `blob-storage.ts`.
+ */
+export interface ProofBlobStorage {
+  /**
+   * Delete blob objects by key. MUST be idempotent — deleting an already-missing
+   * key is a no-op, not an error — so a partially-completed purge can be retried
+   * safely. Rejects only on transport/auth failures the caller should retry.
+   */
+  deleteMany(keys: ReadonlyArray<string>): Promise<void>;
+}
+

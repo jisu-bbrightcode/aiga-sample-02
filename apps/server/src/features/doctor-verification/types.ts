@@ -27,6 +27,13 @@ export interface VerificationApplication {
   readonly rejectionReason: string | null;
   readonly reviewedByAdminId: string | null;
   readonly reviewedAt: Date | null;
+  /**
+   * When the proof blob objects were purged and `proofDocuments` cleared per the
+   * retention policy (BBR-1167). `null` while proofs are still retained. A row
+   * can be terminal (approved/rejected) yet still have `proofPurgedAt = null`
+   * until the retention window elapses and the purge job runs.
+   */
+  readonly proofPurgedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }

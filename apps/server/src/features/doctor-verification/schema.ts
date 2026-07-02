@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { pgTable, uuid, text, timestamp, jsonb, index, pgEnum } from 'drizzle-orm/pg-core';
 import { user } from '../../db/schema/auth.js';
 
@@ -54,12 +55,20 @@ export const doctorVerificationApplications = pgTable(
     }),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
 
+    // Retention (BBR-1167): timestamp at which proof blobs were deleted and
+    // `proofDocuments` cleared. NULL while proofs are still retained.
+    proofPurgedAt: timestamp('proof_purged_at', { withTimezone: true }),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     applicantIdx: index('dv_applications_applicant_idx').on(table.applicantId),
     statusIdx: index('dv_applications_status_idx').on(table.status),
+    // Supports the retention purge scan: terminal rows not yet purged.
+    proofRetentionIdx: index('dv_applications_proof_retention_idx')
+      .on(table.status, table.reviewedAt)
+      .where(sql`${table.proofPurgedAt} is null`),
   }),
 );
 

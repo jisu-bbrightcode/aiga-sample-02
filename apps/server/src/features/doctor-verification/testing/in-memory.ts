@@ -8,6 +8,7 @@ import type {
   DoctorVerificationRepository,
   InsertApplicationData,
   MembershipService,
+  ProofBlobStorage,
   RecordEventData,
   Transactor,
   TransactionScope,
@@ -15,6 +16,7 @@ import type {
 import type {
   ListApplicationsQuery,
   Paginated,
+  ProofDocumentRef,
   VerificationApplication,
   VerificationEvent,
 } from '../types.js';
@@ -60,6 +62,7 @@ export class InMemoryRepository implements DoctorVerificationRepository {
       rejectionReason: null,
       reviewedByAdminId: null,
       reviewedAt: null,
+      proofPurgedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -118,6 +121,56 @@ export class InMemoryRepository implements DoctorVerificationRepository {
     };
     this.events.push(event);
     return event;
+  }
+
+  async findProofPurgeCandidates(
+    reviewedBefore: Date,
+    limit: number,
+  ): Promise<ReadonlyArray<VerificationApplication>> {
+    return this.applications
+      .filter(
+        (a) =>
+          (a.status === 'approved' || a.status === 'rejected') &&
+          a.proofPurgedAt === null &&
+          a.proofDocuments.length > 0 &&
+          a.reviewedAt !== null &&
+          a.reviewedAt.getTime() <= reviewedBefore.getTime(),
+      )
+      .sort((a, b) => (a.reviewedAt!.getTime() - b.reviewedAt!.getTime()))
+      .slice(0, limit);
+  }
+
+  async listProofKeysByApplicant(applicantId: string): Promise<ReadonlyArray<string>> {
+    return this.applications
+      .filter((a) => a.applicantId === applicantId && a.proofPurgedAt === null)
+      .flatMap((a) => a.proofDocuments.map((doc: ProofDocumentRef) => doc.key));
+  }
+
+  async clearProofDocuments(id: string, purgedAt: Date): Promise<void> {
+    const app = this.applications.find((a) => a.id === id);
+    if (!app || app.proofPurgedAt !== null) return;
+    this.replace({ ...app, proofDocuments: [], proofPurgedAt: purgedAt, updatedAt: purgedAt });
+  }
+}
+
+/**
+ * In-memory proof blob storage fake. Records every deleted key (idempotent),
+ * and can be told to fail the next call to exercise retry semantics.
+ */
+export class FakeProofBlobStorage implements ProofBlobStorage {
+  readonly deletedKeys: string[] = [];
+  private failNextCall = false;
+
+  failNext(): void {
+    this.failNextCall = true;
+  }
+
+  async deleteMany(keys: ReadonlyArray<string>): Promise<void> {
+    if (this.failNextCall) {
+      this.failNextCall = false;
+      throw new Error('blob delete failed');
+    }
+    this.deletedKeys.push(...keys);
   }
 }
 

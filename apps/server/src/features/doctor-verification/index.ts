@@ -34,3 +34,29 @@ export {
 export type { DoctorVerificationRouterDeps } from './http.js';
 export * from './schema.js';
 export * from './validation.js';
+
+// Retention / deletion policy (BBR-1167).
+export {
+  DEFAULT_RETENTION_DAYS,
+  DEFAULT_PURGE_BATCH_SIZE,
+  loadRetentionPolicy,
+  purgeCutoff,
+} from './retention.js';
+export type { RetentionPolicy, RetentionEnv } from './retention.js';
+export {
+  ProofRetentionService,
+} from './retention.service.js';
+export type {
+  ProofRetentionServiceDeps,
+  AgedPurgeResult,
+  ApplicantPurgeResult,
+} from './retention.service.js';
+export {
+  createProofRetentionService,
+  runProofRetentionPurge,
+} from './retention-job.js';
+export {
+  createProofBlobStorage,
+  NoopProofBlobStorage,
+  VercelProofBlobStorage,
+} from './blob-storage.js';

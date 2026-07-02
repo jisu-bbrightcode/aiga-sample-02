@@ -77,20 +77,43 @@ base-owned files (left to the base owner to avoid clobbering concurrent edits):
 
 `BBR-1128` (BE QA) is the downstream reviewer for this module.
 
-## Privacy follow-up (open — from issue Scope)
+## Privacy: retention / deletion policy (BBR-1167 — confirmed + implemented)
 
-> 개인정보 최소 수집·증빙 보관/삭제 정책 확정 필요 (follow-up).
+> 개인정보 최소 수집·증빙 보관/삭제 정책.
 
-Decisions baked in so far:
+Decisions baked in:
 - **Minimization:** only license number, license name, optional specialty, and
   proof-document storage **references** are collected. No proof binaries are
   stored in Postgres (Vercel Blob keys only).
 - **Access:** applicants can read only their own applications; admin routes are
   role-gated; error messages never echo PII.
 
-Still to confirm with product/legal (tracked as a follow-up, not blocking this
-module): proof-document **retention window**, deletion trigger on rejection vs.
-account deletion, and whether license numbers should be encrypted at rest.
+Retention policy (confirmed defaults from BBR-1167; adopted absent objection):
+- **Proof-document retention window** — proof blobs are deleted and
+  `proof_documents` cleared **180 days after a terminal decision** (approve /
+  reject). Configurable via `DOCTOR_VERIFICATION_RETENTION_DAYS` without a code
+  change; invalid values fall back to the 180-day default (never silently
+  disables retention).
+- **Deletion triggers** — (1) the scheduled purge job for aged terminal
+  applications; (2) account deletion, where DB rows cascade via the FK
+  (`ON DELETE CASCADE`) and proof blobs are removed by the
+  `purgeApplicantProofs` erasure hook.
+- **License number at rest** — kept plaintext for MVP (admin review needs it);
+  revisit encryption if compliance requires.
+
+Implementation (`retention.ts`, `retention.service.ts`, `retention-job.ts`,
+`blob-storage.ts`):
+- `ProofRetentionService.purgeAgedTerminalApplications()` pages through terminal
+  rows past the window (`findProofPurgeCandidates` + partial index
+  `dv_applications_proof_retention_idx`), deletes blobs **before** stamping
+  `proof_purged_at`, and retries on the next run if a blob delete fails.
+- `ProofRetentionService.purgeApplicantProofs(applicantId)` — account-deletion /
+  right-to-erasure hook.
+- Triggers: `POST /admin/doctor-verification/retention/purge` (admin-gated;
+  suitable for a Vercel Cron schedule) or the `runProofRetentionPurge` process
+  entry point in `retention-job.ts`.
+- Blob storage degrades gracefully: `VercelProofBlobStorage` when
+  `BLOB_READ_WRITE_TOKEN` is set, else a `NoopProofBlobStorage` that warns.
 
 ## Tests
 
