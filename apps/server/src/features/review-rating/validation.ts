@@ -22,6 +22,20 @@ const titleSchema = z
   .nullish()
   .transform((v) => (v && v.length > 0 ? v : null));
 
+/**
+ * Title for PATCH updates. Unlike {@link titleSchema} (create), an *omitted*
+ * title must stay `undefined` ("leave unchanged") and NOT collapse to `null`
+ * ("clear it") — otherwise a rating-only edit silently wipes the title and the
+ * "at least one field" refine below is defeated. Explicit `null`/blank clears.
+ */
+const updateTitleSchema = z
+  .string()
+  .trim()
+  .max(TITLE_MAX)
+  .nullable()
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v && v.length > 0 ? v : null));
+
 const bodySchema = z.string().trim().min(1).max(BODY_MAX);
 
 /** POST /profiles/:targetUserId/reviews */
@@ -38,7 +52,7 @@ export const createReviewSchema = z.object({
 export const updateReviewSchema = z
   .object({
     rating: ratingSchema.optional(),
-    title: titleSchema,
+    title: updateTitleSchema,
     body: bodySchema.optional(),
   })
   .refine(
