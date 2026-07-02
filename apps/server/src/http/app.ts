@@ -6,13 +6,10 @@ import { loadEnv } from "../env.js";
 import { cors } from "./middleware/cors.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { attachPrincipal } from "./middleware/session.js";
-import {
-  adminCategoriesRouter,
-  adminContentRouter,
-} from "./routes/admin-content.routes.js";
+import { adminContentRouter } from "./routes/admin-content.routes.js";
 import { adminUsersRouter } from "./routes/admin-users.routes.js";
 import { authRouter } from "./routes/auth.routes.js";
-import { categoriesRouter, contentRouter } from "./routes/content.routes.js";
+import { contentRouter } from "./routes/content.routes.js";
 
 /**
  * Assemble the Express application for the auth/membership surface.
@@ -48,13 +45,11 @@ export function buildApp(): Express {
   app.use("/api/v1/auth", authRouter());
   app.use("/api/v1/admin/users", adminUsersRouter());
 
-  // Content Catalog (BBR-1145): public browse/search/detail + member CRUD +
-  // admin management. Mounted here until the base-router task (BBR-1117)
-  // centralizes feature-router wiring; additive and self-contained.
+  // Content Catalog (BBR-1176 locked contract): public browse/search/detail +
+  // member CRUD + admin management. Mounted here until the base-router task
+  // (BBR-1117) centralizes feature-router wiring; additive and self-contained.
   app.use("/api/v1/content", contentRouter());
-  app.use("/api/v1/categories", categoriesRouter());
   app.use("/api/v1/admin/content", adminContentRouter());
-  app.use("/api/v1/admin/categories", adminCategoriesRouter());
 
 
   app.use(notFoundHandler);

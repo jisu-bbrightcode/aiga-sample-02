@@ -3,7 +3,6 @@ import { Router } from "express";
 import { PERMISSIONS } from "../../rbac/permissions.js";
 import { asyncHandler } from "../async.js";
 import * as content from "../controllers/content.controller.js";
-import * as categories from "../controllers/categories.controller.js";
 import { requireAuth, requirePermission } from "../middleware/entitlement.js";
 
 /**
@@ -24,7 +23,7 @@ export function contentRouter(): Router {
   // Member: my own content (any status).
   router.get("/mine", requireAuth(), asyncHandler(content.mine));
 
-  // Public detail by id or slug.
+  // Public detail by id.
   router.get("/:id", asyncHandler(content.detail));
 
   // Authoring (member).
@@ -34,23 +33,11 @@ export function contentRouter(): Router {
     requirePermission(PERMISSIONS.contentUpdateOwn),
     asyncHandler(content.update),
   );
-  router.post(
-    "/:id/submit",
-    requirePermission(PERMISSIONS.contentUpdateOwn),
-    asyncHandler(content.submit),
-  );
   router.delete(
     "/:id",
     requirePermission(PERMISSIONS.contentDeleteOwn),
     asyncHandler(content.remove),
   );
 
-  return router;
-}
-
-/** Public category list under `/api/v1/categories`. */
-export function categoriesRouter(): Router {
-  const router = Router();
-  router.get("/", asyncHandler(categories.list));
   return router;
 }

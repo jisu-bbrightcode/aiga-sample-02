@@ -5,21 +5,17 @@
  * to the Drizzle/Postgres implementation in production without code changes.
  */
 import type {
-  Category,
-  Content,
+  ContentItem,
   ContentQuery,
-  CreateCategoryInput,
-  CreateContentInput,
   ContentStatus,
+  CreateContentInput,
   Paginated,
-  UpdateCategoryInput,
   UpdateContentInput,
 } from "./types.js";
 
 /** Fields the repository sets on insert (author-supplied + defaults). */
 export interface InsertContentData extends CreateContentInput {
   readonly id: string;
-  readonly slug: string;
   readonly status: ContentStatus;
   readonly now: Date;
 }
@@ -33,33 +29,14 @@ export interface PatchContentData extends UpdateContentInput {
 }
 
 export interface ContentRepository {
-  findById(id: string): Promise<Content | undefined>;
-  findBySlug(slug: string): Promise<Content | undefined>;
-  list(query: ContentQuery): Promise<Paginated<Content>>;
-  insert(data: InsertContentData): Promise<Content>;
-  patch(id: string, data: PatchContentData): Promise<Content>;
-  /** Atomically increment the view counter; best-effort, returns new count. */
+  findById(id: string): Promise<ContentItem | undefined>;
+  list(query: ContentQuery): Promise<Paginated<ContentItem>>;
+  insert(data: InsertContentData): Promise<ContentItem>;
+  patch(id: string, data: PatchContentData): Promise<ContentItem>;
+  /** Atomically increment the view counter. */
   incrementViewCount(id: string): Promise<void>;
   /** Hard delete (admin only). Soft delete is done via `patch(deletedAt)`. */
   hardDelete(id: string): Promise<void>;
-}
-
-export interface InsertCategoryData extends CreateCategoryInput {
-  readonly id: string;
-  readonly now: Date;
-}
-
-export interface PatchCategoryData extends UpdateCategoryInput {
-  readonly updatedAt: Date;
-}
-
-export interface CategoryRepository {
-  findById(id: string): Promise<Category | undefined>;
-  findBySlug(slug: string): Promise<Category | undefined>;
-  list(): Promise<readonly Category[]>;
-  insert(data: InsertCategoryData): Promise<Category>;
-  patch(id: string, data: PatchCategoryData): Promise<Category>;
-  delete(id: string): Promise<void>;
 }
 
 /** Deterministic time source (injected so tests are stable). */

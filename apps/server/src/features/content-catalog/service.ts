@@ -1,35 +1,23 @@
 /**
- * Content Catalog application services — orchestrate the catalog use cases.
+ * Content Catalog application service — orchestrates the catalog use cases.
  *
- * Depend only on ports (repositories, clock, id generator), so they are fully
+ * Depends only on ports (repository, clock, id generator), so it is fully
  * unit-testable with in-memory fakes and independent of Drizzle / Express /
- * better-auth internals. Business rules (ownership, slug uniqueness, status
- * transitions, public visibility) live here — never in the HTTP layer.
+ * better-auth internals. Business rules (ownership, notice-authoring rights,
+ * publish/hide, public visibility) live here — never in the HTTP layer.
+ *
+ * Contract: BBR-1144#document-entity-contract (LOCKED).
  */
-import {
-  categoryNotFound,
-  contentNotFound,
-  forbidden,
-  slugConflict,
-} from "./errors.js";
+import { contentNotFound, forbidden } from "./errors.js";
+import type { Clock, ContentRepository, IdGenerator } from "./ports.js";
+import { isPublishing } from "./state-machine.js";
 import type {
-  CategoryRepository,
-  Clock,
-  ContentRepository,
-  IdGenerator,
-} from "./ports.js";
-import { assertTransition, isPublishing } from "./state-machine.js";
-import { deriveSlug } from "./slug.js";
-import type {
-  Category,
-  Content,
+  ContentItem,
   ContentQuery,
   ContentSort,
   ContentStatus,
-  CreateCategoryInput,
   CreateContentInput,
   Paginated,
-  UpdateCategoryInput,
   UpdateContentInput,
 } from "./types.js";
 
@@ -52,7 +40,7 @@ export interface ContentServiceDeps {
 }
 
 const DEFAULT_LIST: Pick<ContentQuery, "sort" | "page" | "pageSize"> = {
-  sort: "newest",
+  sort: "latest",
   page: 1,
   pageSize: 20,
 };
@@ -71,7 +59,7 @@ export class ContentService {
   // --- Public reads --------------------------------------------------------
 
   /** Public catalog list — published, non-deleted only. */
-  async listPublished(query: Partial<ContentQuery>): Promise<Paginated<Content>> {
+  async listPublished(query: Partial<ContentQuery>): Promise<Paginated<ContentItem>> {
     return this.repo.list({
       ...DEFAULT_LIST,
       ...query,
@@ -80,8 +68,8 @@ export class ContentService {
     });
   }
 
-  /** Unified search — published, non-deleted, ranked by the repo. */
-  async search(query: Partial<ContentQuery> & { q: string }): Promise<Paginated<Content>> {
+  /** Unified content search — published, non-deleted, ranked by the repo. */
+  async search(query: Partial<ContentQuery> & { q: string }): Promise<Paginated<ContentItem>> {
     return this.repo.list({
       ...DEFAULT_LIST,
       ...query,
@@ -91,12 +79,12 @@ export class ContentService {
   }
 
   /**
-   * Detail by id or slug. Published content is visible to everyone; non-public
-   * statuses are visible only to the author or an admin. Increments the view
-   * counter on a successful public (published) read.
+   * Detail by id. Published content is visible to everyone; non-public statuses
+   * are visible only to the author or an admin. Increments the view counter on
+   * a successful public (published) read.
    */
-  async getForViewer(idOrSlug: string, viewer: ContentViewer): Promise<Content> {
-    const found = await this.resolve(idOrSlug);
+  async getForViewer(id: string, viewer: ContentViewer): Promise<ContentItem> {
+    const found = await this.repo.findById(id);
     if (!found || found.deletedAt) throw contentNotFound();
 
     const isOwner = viewer.userId !== null && viewer.userId === found.authorId;
@@ -111,7 +99,7 @@ export class ContentService {
   }
 
   /** A member's own items across all statuses (not soft-deleted). */
-  async listOwned(authorId: string, query: Partial<ContentQuery>): Promise<Paginated<Content>> {
+  async listOwned(authorId: string, query: Partial<ContentQuery>): Promise<Paginated<ContentItem>> {
     return this.repo.list({
       ...DEFAULT_LIST,
       ...query,
@@ -122,86 +110,68 @@ export class ContentService {
 
   // --- Authoring (member) --------------------------------------------------
 
-  /** Create a new draft owned by the author. */
-  async create(input: CreateContentInput): Promise<Content> {
+  /** Create a new draft owned by the author. `notice` requires an admin actor. */
+  async create(input: CreateContentInput, actor: ContentActor): Promise<ContentItem> {
+    if (input.category === "notice" && !actor.isAdmin) {
+      throw forbidden("Only admins may author notice content.");
+    }
     const id = this.ids.next();
-    const slug = await this.resolveNewSlug(input.slug, input.title, id);
     const now = this.clock.now();
-
-    return this.repo.insert({
-      ...input,
-      id,
-      slug,
-      status: "draft",
-      now,
-    });
+    return this.repo.insert({ ...input, id, status: "draft", now });
   }
 
   /** Patch an item the actor owns (or any item when admin). */
-  async update(id: string, actor: ContentActor, patch: UpdateContentInput): Promise<Content> {
+  async update(id: string, actor: ContentActor, patch: UpdateContentInput): Promise<ContentItem> {
     const existing = await this.requireOwned(id, actor);
-    const slug = await this.resolveSlugChange(patch.slug, existing);
-
-    return this.repo.patch(id, {
-      ...patch,
-      ...(slug !== undefined ? { slug } : {}),
-      updatedAt: this.clock.now(),
-    });
-  }
-
-  /** Author submits a draft/rejected item for moderation. */
-  async submitForReview(id: string, actor: ContentActor): Promise<Content> {
-    const existing = await this.requireOwned(id, actor);
-    assertTransition(existing.status, "pending_review");
-    return this.repo.patch(id, {
-      status: "pending_review",
-      updatedAt: this.clock.now(),
-    });
+    if (patch.category === "notice" && !actor.isAdmin && existing.category !== "notice") {
+      throw forbidden("Only admins may set the notice category.");
+    }
+    return this.repo.patch(id, { ...patch, updatedAt: this.clock.now() });
   }
 
   /** Soft delete an item the actor owns (or any item when admin). */
   async remove(id: string, actor: ContentActor): Promise<void> {
     await this.requireOwned(id, actor);
-    await this.repo.patch(id, {
-      deletedAt: this.clock.now(),
-      updatedAt: this.clock.now(),
-    });
+    const now = this.clock.now();
+    await this.repo.patch(id, { deletedAt: now, updatedAt: now });
   }
 
   // --- Admin / moderation --------------------------------------------------
 
-  async adminList(query: Partial<ContentQuery>): Promise<Paginated<Content>> {
+  async adminList(query: Partial<ContentQuery>): Promise<Paginated<ContentItem>> {
     return this.repo.list({ ...DEFAULT_LIST, ...query });
   }
 
-  async adminGetById(id: string): Promise<Content> {
+  async adminGetById(id: string): Promise<ContentItem> {
     const found = await this.repo.findById(id);
     if (!found) throw contentNotFound();
     return found;
   }
 
-  async adminUpdate(id: string, patch: UpdateContentInput): Promise<Content> {
+  async adminUpdate(id: string, patch: UpdateContentInput): Promise<ContentItem> {
     const existing = await this.repo.findById(id);
     if (!existing) throw contentNotFound();
-    const slug = await this.resolveSlugChange(patch.slug, existing);
-    return this.repo.patch(id, {
-      ...patch,
-      ...(slug !== undefined ? { slug } : {}),
-      updatedAt: this.clock.now(),
-    });
+    return this.repo.patch(id, { ...patch, updatedAt: this.clock.now() });
   }
 
-  /** Moderation: move an item to a new status, enforcing the state machine. */
-  async adminSetStatus(id: string, status: ContentStatus): Promise<Content> {
+  /** Moderation: publish / hide / unpublish. Stamps `publishedAt` on first publish. */
+  async adminSetStatus(id: string, status: ContentStatus): Promise<ContentItem> {
     const existing = await this.repo.findById(id);
     if (!existing) throw contentNotFound();
-    assertTransition(existing.status, status);
     const now = this.clock.now();
     return this.repo.patch(id, {
       status,
       ...(isPublishing(existing.status, status) ? { publishedAt: now } : {}),
       updatedAt: now,
     });
+  }
+
+  /** Restore a soft-deleted item (clears `deletedAt`, keeps its status). */
+  async adminRestore(id: string): Promise<ContentItem> {
+    const existing = await this.repo.findById(id);
+    if (!existing) throw contentNotFound();
+    const now = this.clock.now();
+    return this.repo.patch(id, { deletedAt: null, updatedAt: now });
   }
 
   async adminRemove(id: string, options: { hard?: boolean } = {}): Promise<void> {
@@ -211,91 +181,17 @@ export class ContentService {
       await this.repo.hardDelete(id);
       return;
     }
-    await this.repo.patch(id, {
-      deletedAt: this.clock.now(),
-      updatedAt: this.clock.now(),
-    });
+    const now = this.clock.now();
+    await this.repo.patch(id, { deletedAt: now, updatedAt: now });
   }
 
   // --- Internals -----------------------------------------------------------
 
-  private async resolve(idOrSlug: string): Promise<Content | undefined> {
-    return (await this.repo.findById(idOrSlug)) ?? (await this.repo.findBySlug(idOrSlug));
-  }
-
-  private async requireOwned(id: string, actor: ContentActor): Promise<Content> {
+  private async requireOwned(id: string, actor: ContentActor): Promise<ContentItem> {
     const existing = await this.repo.findById(id);
     if (!existing || existing.deletedAt) throw contentNotFound();
     if (!actor.isAdmin && existing.authorId !== actor.userId) throw forbidden();
     return existing;
-  }
-
-  private async resolveNewSlug(
-    requested: string | undefined,
-    title: string,
-    id: string,
-  ): Promise<string> {
-    if (requested) {
-      if (await this.repo.findBySlug(requested)) throw slugConflict(requested);
-      return requested;
-    }
-    const base = deriveSlug(title, id);
-    if (!(await this.repo.findBySlug(base))) return base;
-    return `${base}-${id.slice(0, 8)}`;
-  }
-
-  private async resolveSlugChange(
-    requested: string | undefined,
-    existing: Content,
-  ): Promise<string | undefined> {
-    if (requested === undefined || requested === existing.slug) return undefined;
-    const clash = await this.repo.findBySlug(requested);
-    if (clash && clash.id !== existing.id) throw slugConflict(requested);
-    return requested;
-  }
-}
-
-export interface CategoryServiceDeps {
-  readonly repo: CategoryRepository;
-  readonly clock: Clock;
-  readonly ids: IdGenerator;
-}
-
-export class CategoryService {
-  private readonly repo: CategoryRepository;
-  private readonly clock: Clock;
-  private readonly ids: IdGenerator;
-
-  constructor(deps: CategoryServiceDeps) {
-    this.repo = deps.repo;
-    this.clock = deps.clock;
-    this.ids = deps.ids;
-  }
-
-  /** All categories, ordered by sortOrder then name (repo-defined). */
-  async list(): Promise<readonly Category[]> {
-    return this.repo.list();
-  }
-
-  async create(input: CreateCategoryInput): Promise<Category> {
-    if (await this.repo.findBySlug(input.slug)) throw slugConflict(input.slug);
-    return this.repo.insert({ ...input, id: this.ids.next(), now: this.clock.now() });
-  }
-
-  async update(id: string, patch: UpdateCategoryInput): Promise<Category> {
-    const existing = await this.repo.findById(id);
-    if (!existing) throw categoryNotFound();
-    if (patch.slug && patch.slug !== existing.slug) {
-      const clash = await this.repo.findBySlug(patch.slug);
-      if (clash && clash.id !== id) throw slugConflict(patch.slug);
-    }
-    return this.repo.patch(id, { ...patch, updatedAt: this.clock.now() });
-  }
-
-  async remove(id: string): Promise<void> {
-    const existing = await this.repo.findById(id);
-    if (!existing) throw categoryNotFound();
-    await this.repo.delete(id);
   }
 }
 

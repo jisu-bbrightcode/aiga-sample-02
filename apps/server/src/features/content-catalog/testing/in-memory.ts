@@ -7,22 +7,13 @@
  * write produces a new frozen object.
  */
 import type {
-  CategoryRepository,
   Clock,
   ContentRepository,
   IdGenerator,
-  InsertCategoryData,
   InsertContentData,
-  PatchCategoryData,
   PatchContentData,
 } from "../ports.js";
-import type {
-  Category,
-  Content,
-  ContentQuery,
-  ContentSort,
-  Paginated,
-} from "../types.js";
+import type { ContentItem, ContentQuery, ContentSort, Paginated } from "../types.js";
 
 /** Fixed clock — returns the same instant unless advanced. */
 export class FixedClock implements Clock {
@@ -48,52 +39,43 @@ export class SequentialIdGenerator implements IdGenerator {
   }
 }
 
-const matchesQuery = (content: Content, q: string): boolean => {
-  const haystack = [content.title, content.summary, content.body, ...content.tags]
-    .join("\n")
-    .toLowerCase();
+const matchesQuery = (content: ContentItem, q: string): boolean => {
+  const haystack = [content.title, content.body].join("\n").toLowerCase();
   return haystack.includes(q.toLowerCase());
 };
 
-const comparators: Record<ContentSort, (a: Content, b: Content) => number> = {
-  newest: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-  oldest: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-  popular: (a, b) => b.viewCount - a.viewCount || b.createdAt.getTime() - a.createdAt.getTime(),
-  title: (a, b) => a.title.localeCompare(b.title),
+const comparators: Record<ContentSort, (a: ContentItem, b: ContentItem) => number> = {
+  latest: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  popular: (a, b) => b.likeCount - a.likeCount || b.createdAt.getTime() - a.createdAt.getTime(),
+  views: (a, b) => b.viewCount - a.viewCount || b.createdAt.getTime() - a.createdAt.getTime(),
 };
 
 export class InMemoryContentRepository implements ContentRepository {
-  private readonly store = new Map<string, Content>();
+  private readonly store = new Map<string, ContentItem>();
 
   /** Seed helper for tests — inserts a fully-formed record. */
-  seed(content: Content): void {
+  seed(content: ContentItem): void {
     this.store.set(content.id, Object.freeze({ ...content }));
   }
 
-  async findById(id: string): Promise<Content | undefined> {
+  async findById(id: string): Promise<ContentItem | undefined> {
     return this.store.get(id);
   }
 
-  async findBySlug(slug: string): Promise<Content | undefined> {
-    for (const content of this.store.values()) {
-      if (content.slug === slug) return content;
-    }
-    return undefined;
-  }
-
-  async list(query: ContentQuery): Promise<Paginated<Content>> {
+  async list(query: ContentQuery): Promise<Paginated<ContentItem>> {
     const statuses = query.statuses ?? (query.status ? [query.status] : undefined);
     let rows = [...this.store.values()].filter((content) => {
       if (!query.includeDeleted && content.deletedAt) return false;
       if (statuses && !statuses.includes(content.status)) return false;
-      if (query.categoryId && content.categoryId !== query.categoryId) return false;
+      if (query.category && content.category !== query.category) return false;
       if (query.authorId && content.authorId !== query.authorId) return false;
-      if (query.tag && !content.tags.includes(query.tag)) return false;
+      if (query.reported && content.reportCount <= 0) return false;
+      if (query.conditionTag && !content.conditionTags.includes(query.conditionTag)) return false;
       if (query.q && !matchesQuery(content, query.q)) return false;
       return true;
     });
 
-    rows = rows.sort(comparators[query.sort ?? "newest"]);
+    rows = rows.sort(comparators[query.sort ?? "latest"]);
 
     const total = rows.length;
     const start = (query.page - 1) * query.pageSize;
@@ -101,19 +83,19 @@ export class InMemoryContentRepository implements ContentRepository {
     return { items, total, page: query.page, pageSize: query.pageSize };
   }
 
-  async insert(data: InsertContentData): Promise<Content> {
-    const content: Content = Object.freeze({
+  async insert(data: InsertContentData): Promise<ContentItem> {
+    const content: ContentItem = Object.freeze({
       id: data.id,
-      slug: data.slug,
-      title: data.title,
-      summary: data.summary ?? "",
-      body: data.body ?? "",
-      categoryId: data.categoryId ?? null,
-      tags: Object.freeze([...(data.tags ?? [])]),
-      status: data.status,
       authorId: data.authorId,
+      title: data.title,
+      body: data.body ?? "",
+      category: data.category,
+      conditionTags: Object.freeze([...(data.conditionTags ?? [])]),
       coverImageUrl: data.coverImageUrl ?? null,
+      status: data.status,
       viewCount: 0,
+      likeCount: 0,
+      reportCount: 0,
       publishedAt: data.status === "published" ? data.now : null,
       createdAt: data.now,
       updatedAt: data.now,
@@ -123,17 +105,17 @@ export class InMemoryContentRepository implements ContentRepository {
     return content;
   }
 
-  async patch(id: string, data: PatchContentData): Promise<Content> {
+  async patch(id: string, data: PatchContentData): Promise<ContentItem> {
     const existing = this.store.get(id);
     if (!existing) throw new Error(`content ${id} not found`);
-    const next: Content = Object.freeze({
+    const next: ContentItem = Object.freeze({
       ...existing,
       ...(data.title !== undefined ? { title: data.title } : {}),
-      ...(data.summary !== undefined ? { summary: data.summary } : {}),
       ...(data.body !== undefined ? { body: data.body } : {}),
-      ...(data.slug !== undefined ? { slug: data.slug } : {}),
-      ...(data.categoryId !== undefined ? { categoryId: data.categoryId } : {}),
-      ...(data.tags !== undefined ? { tags: Object.freeze([...data.tags]) } : {}),
+      ...(data.category !== undefined ? { category: data.category } : {}),
+      ...(data.conditionTags !== undefined
+        ? { conditionTags: Object.freeze([...data.conditionTags]) }
+        : {}),
       ...(data.coverImageUrl !== undefined ? { coverImageUrl: data.coverImageUrl } : {}),
       ...(data.status !== undefined ? { status: data.status } : {}),
       ...(data.publishedAt !== undefined ? { publishedAt: data.publishedAt } : {}),
@@ -151,66 +133,6 @@ export class InMemoryContentRepository implements ContentRepository {
   }
 
   async hardDelete(id: string): Promise<void> {
-    this.store.delete(id);
-  }
-}
-
-export class InMemoryCategoryRepository implements CategoryRepository {
-  private readonly store = new Map<string, Category>();
-
-  seed(category: Category): void {
-    this.store.set(category.id, Object.freeze({ ...category }));
-  }
-
-  async findById(id: string): Promise<Category | undefined> {
-    return this.store.get(id);
-  }
-
-  async findBySlug(slug: string): Promise<Category | undefined> {
-    for (const category of this.store.values()) {
-      if (category.slug === slug) return category;
-    }
-    return undefined;
-  }
-
-  async list(): Promise<readonly Category[]> {
-    return [...this.store.values()].sort(
-      (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
-    );
-  }
-
-  async insert(data: InsertCategoryData): Promise<Category> {
-    const category: Category = Object.freeze({
-      id: data.id,
-      slug: data.slug,
-      name: data.name,
-      description: data.description ?? null,
-      parentId: data.parentId ?? null,
-      sortOrder: data.sortOrder ?? 0,
-      createdAt: data.now,
-      updatedAt: data.now,
-    });
-    this.store.set(category.id, category);
-    return category;
-  }
-
-  async patch(id: string, data: PatchCategoryData): Promise<Category> {
-    const existing = this.store.get(id);
-    if (!existing) throw new Error(`category ${id} not found`);
-    const next: Category = Object.freeze({
-      ...existing,
-      ...(data.slug !== undefined ? { slug: data.slug } : {}),
-      ...(data.name !== undefined ? { name: data.name } : {}),
-      ...(data.description !== undefined ? { description: data.description } : {}),
-      ...(data.parentId !== undefined ? { parentId: data.parentId } : {}),
-      ...(data.sortOrder !== undefined ? { sortOrder: data.sortOrder } : {}),
-      updatedAt: data.updatedAt,
-    });
-    this.store.set(id, next);
-    return next;
-  }
-
-  async delete(id: string): Promise<void> {
     this.store.delete(id);
   }
 }

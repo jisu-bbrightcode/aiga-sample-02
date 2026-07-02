@@ -1,15 +1,10 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import {
-  getCategoryService,
-  getContentService,
-} from "../../features/content-catalog/factory.js";
+import { getContentService } from "../../features/content-catalog/factory.js";
 import {
   adminListQuerySchema,
-  createCategorySchema,
   setStatusSchema,
-  updateCategorySchema,
   updateContentSchema,
 } from "../../features/content-catalog/validation.js";
 import { guardContent } from "./content-error.js";
@@ -50,11 +45,17 @@ export const update = guardContent(async (req: Request, res: Response) => {
   res.json({ ok: true, data: await getContentService().adminUpdate(id, body) });
 });
 
-/** POST /api/v1/admin/content/:id/status — moderation status change. */
+/** POST /api/v1/admin/content/:id/status — publish / hide / unpublish. */
 export const setStatus = guardContent(async (req: Request, res: Response) => {
   const id = idParamSchema.parse(req.params.id);
   const { status } = setStatusSchema.parse(req.body);
   res.json({ ok: true, data: await getContentService().adminSetStatus(id, status) });
+});
+
+/** POST /api/v1/admin/content/:id/restore — clear soft delete. */
+export const restore = guardContent(async (req: Request, res: Response) => {
+  const id = idParamSchema.parse(req.params.id);
+  res.json({ ok: true, data: await getContentService().adminRestore(id) });
 });
 
 /** DELETE /api/v1/admin/content/:id — soft delete (or ?hard=true purge). */
@@ -63,24 +64,4 @@ export const remove = guardContent(async (req: Request, res: Response) => {
   const hard = hardQuerySchema.parse(req.query.hard);
   await getContentService().adminRemove(id, { hard });
   res.json({ ok: true, data: { id, deleted: true, hard } });
-});
-
-/** POST /api/v1/admin/categories — create a category. */
-export const createCategory = guardContent(async (req: Request, res: Response) => {
-  const body = createCategorySchema.parse(req.body);
-  res.status(201).json({ ok: true, data: await getCategoryService().create(body) });
-});
-
-/** PATCH /api/v1/admin/categories/:id — update a category. */
-export const updateCategory = guardContent(async (req: Request, res: Response) => {
-  const id = idParamSchema.parse(req.params.id);
-  const body = updateCategorySchema.parse(req.body);
-  res.json({ ok: true, data: await getCategoryService().update(id, body) });
-});
-
-/** DELETE /api/v1/admin/categories/:id — delete a category. */
-export const removeCategory = guardContent(async (req: Request, res: Response) => {
-  const id = idParamSchema.parse(req.params.id);
-  await getCategoryService().remove(id);
-  res.json({ ok: true, data: { id, deleted: true } });
 });

@@ -53,7 +53,7 @@ export const list = guardContent(async (req: Request, res: Response) => {
   res.json(pageEnvelope(await getContentService().listPublished(query)));
 });
 
-/** GET /api/v1/content/search — unified search over published content. */
+/** GET /api/v1/content/search — content search over published items. */
 export const search = guardContent(async (req: Request, res: Response) => {
   const query = searchQuerySchema.parse(req.query);
   res.json(pageEnvelope(await getContentService().search(query)));
@@ -66,18 +66,18 @@ export const mine = guardContent(async (req: Request, res: Response) => {
   res.json(pageEnvelope(await getContentService().listOwned(actor.userId, query)));
 });
 
-/** GET /api/v1/content/:id — detail by id or slug. */
+/** GET /api/v1/content/:id — detail by id. */
 export const detail = guardContent(async (req: Request, res: Response) => {
-  const idOrSlug = idParamSchema.parse(req.params.id);
-  const content = await getContentService().getForViewer(idOrSlug, viewerOf(req));
+  const id = idParamSchema.parse(req.params.id);
+  const content = await getContentService().getForViewer(id, viewerOf(req));
   res.json({ ok: true, data: content });
 });
 
-/** POST /api/v1/content — create a draft (member). */
+/** POST /api/v1/content — create a draft (member; notice requires admin). */
 export const create = guardContent(async (req: Request, res: Response) => {
   const actor = actorOf(req);
   const body = createContentSchema.parse(req.body);
-  const content = await getContentService().create({ ...body, authorId: actor.userId });
+  const content = await getContentService().create({ ...body, authorId: actor.userId }, actor);
   res.status(201).json({ ok: true, data: content });
 });
 
@@ -87,14 +87,6 @@ export const update = guardContent(async (req: Request, res: Response) => {
   const id = idParamSchema.parse(req.params.id);
   const body = updateContentSchema.parse(req.body);
   const content = await getContentService().update(id, actor, body);
-  res.json({ ok: true, data: content });
-});
-
-/** POST /api/v1/content/:id/submit — submit for moderation (member). */
-export const submit = guardContent(async (req: Request, res: Response) => {
-  const actor = actorOf(req);
-  const id = idParamSchema.parse(req.params.id);
-  const content = await getContentService().submitForReview(id, actor);
   res.json({ ok: true, data: content });
 });
 
