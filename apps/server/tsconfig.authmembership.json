@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/env.ts",
+    "src/index.ts",
+    "src/db/**/*.ts",
+    "src/auth/**/*.ts",
+    "src/membership/**/*.ts",
+    "src/rbac/**/*.ts",
+    "src/http/**/*.ts",
+    "src/services/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/features",
+    "src/db/schema/index.ts"
+  ]
+}
