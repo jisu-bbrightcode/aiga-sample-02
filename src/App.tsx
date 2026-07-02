@@ -3949,37 +3949,54 @@ function ItemDetailPage({ itemId }: { itemId: string }) {
       data-state="default"
       id="SCR-006"
     >
-      <button className="item-detail-back" onClick={() => navigate("/items")} type="button">
-        <ArrowLeft size={18} aria-hidden="true" />
-        <span>상세</span>
-      </button>
-      <header className="public-page-header compact" data-field="detail" data-testid="scr-006-fld-01">
-        <span className="public-eyebrow">
-          <FolderOpen size={16} aria-hidden="true" />
-          SCR-006
-        </span>
-        <h1 id="item-detail-title">{detail.title}</h1>
-        <p>{detail.summary}</p>
+      <header className="item-detail-topbar">
+        <button className="item-detail-back" onClick={() => navigate("/items")} type="button">
+          <ArrowLeft size={24} aria-hidden="true" />
+          <span className="sr-only">상세</span>
+        </button>
       </header>
 
-      <div className="public-dashboard-grid" data-field="metadata" data-testid="scr-006-fld-03">
-        <article className="public-metric-card"><strong>{detail.status}</strong><span>상태</span></article>
-        <article className="public-metric-card"><strong>{detail.category}</strong><span>카테고리</span></article>
-        <article className="public-metric-card"><strong>{detail.conditionTags[0] ?? "-"}</strong><span>질환 태그</span></article>
+      <div className="doctor-profile-card" data-field="detail" data-testid="scr-006-fld-01">
+        <div className="doctor-profile-top">
+          <div className="doctor-profile-info">
+            <div className="doctor-profile-namerow">
+              <h1 id="item-detail-title">{detail.title}</h1>
+              <span className="doctor-cert-badge">
+                <CheckCircle2 size={12} aria-hidden="true" />
+                인증 완료
+              </span>
+            </div>
+            <p className="doctor-profile-hospital">{detail.summary}</p>
+          </div>
+          <span className="doctor-profile-avatar" aria-hidden="true">
+            {contentCategoryLabels[detail.category].slice(0, 1)}
+          </span>
+        </div>
+
+        <dl className="doctor-spec-rows" data-field="metadata" data-testid="scr-006-fld-03">
+          <div className="doctor-spec-row">
+            <dt>상태</dt>
+            <dd>{detail.status}</dd>
+          </div>
+          <div className="doctor-spec-row">
+            <dt>분류</dt>
+            <dd>{detail.category}</dd>
+          </div>
+          <div className="doctor-spec-row">
+            <dt>질환</dt>
+            <dd>{detail.conditionTags[0] ?? "-"}</dd>
+          </div>
+        </dl>
       </div>
 
-      <article className="public-content-card">
-        <div className="public-card-topline">
-          <span>{contentCategoryLabels[detail.category]}</span>
-          <span>{detail.updatedAt}</span>
-        </div>
-        <p>{detail.body}</p>
-      </article>
-
-      <div className="public-card-actions" data-field="relatedActions" data-testid="scr-006-fld-02">
+      <div
+        className="doctor-action-row"
+        data-field="relatedActions"
+        data-testid="scr-006-fld-02"
+      >
         <button
           aria-label="주요 액션"
-          className="public-primary-button"
+          className="doctor-action-primary"
           data-testid="scr-006-act-01"
           onClick={() => requestAuth("주요 액션 선택", () => setStatus("주요 액션 완료"))}
           type="button"
@@ -3989,7 +4006,7 @@ function ItemDetailPage({ itemId }: { itemId: string }) {
         </button>
         {detail.relatedItems.map((related, index) => (
           <button
-            className="public-ghost-button"
+            className="doctor-action-ghost"
             data-related-id={related.id}
             data-testid={index === 0 ? "scr-006-act-02" : undefined}
             key={related.id}
@@ -4002,7 +4019,21 @@ function ItemDetailPage({ itemId }: { itemId: string }) {
         ))}
       </div>
 
-      {status ? <p role="status">{status}</p> : null}
+      <div className="doctor-section-bar" aria-hidden="true" />
+
+      <article className="doctor-detail-body">
+        <div className="doctor-detail-body-head">
+          <span>{contentCategoryLabels[detail.category]}</span>
+          <span>{detail.updatedAt}</span>
+        </div>
+        <p>{detail.body}</p>
+      </article>
+
+      {status ? (
+        <p className="doctor-detail-status" role="status">
+          {status}
+        </p>
+      ) : null}
     </section>
   );
 }
@@ -4145,15 +4176,9 @@ function ItemsPage() {
   return (
     <section className="scr-items-screen" data-device="mobile" data-screen="SCR-005" id="SCR-005">
       <header className="scr-items-header">
-        <div>
-          <span className="public-eyebrow">
-            <List size={16} aria-hidden="true" />
-            SCR-005
-          </span>
-          <h1>목록</h1>
-        </div>
+        <h1>목록</h1>
         <PublicLink ariaLabel="검색으로 이동" className="scr-items-icon-link" href="/search">
-          <Search size={18} aria-hidden="true" />
+          <Search size={20} aria-hidden="true" />
         </PublicLink>
       </header>
 
@@ -4249,9 +4274,20 @@ function ItemsPage() {
                         </span>
                       </span>
                       <span className="scr-items-hospital">{item.summary}</span>
+                      <span className="scr-items-tagwrap" aria-hidden="true">
+                        {item.conditionTags.map((tag, tagIndex) => (
+                          <span
+                            className={tagIndex === 0 ? "scr-items-tag primary" : "scr-items-tag"}
+                            key={tag}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </span>
                       <span className="scr-items-meta">
-                        {item.conditionTags.join(", ")}
-                        <span aria-hidden="true">·</span>
+                        <Star size={14} aria-hidden="true" />
+                        <strong>5</strong>
+                        <span className="scr-items-meta-dot" aria-hidden="true" />
                         조회 {item.viewCount}
                       </span>
                     </span>
@@ -4463,12 +4499,15 @@ function SearchPage() {
   return (
     <section className="search-screen" data-screen="SCR-004" id="SCR-004">
       <header className="search-header">
-        <span className="public-eyebrow">
-          <Search size={16} aria-hidden="true" />
-          통합 검색
-        </span>
         <h1>통합 검색</h1>
-        <p>콘텐츠, 병원, 의사, 커뮤니티 글을 탭별로 찾아봅니다.</p>
+        <button
+          aria-label="검색 닫기"
+          className="search-close-button"
+          onClick={() => navigate("/")}
+          type="button"
+        >
+          <X size={24} aria-hidden="true" />
+        </button>
       </header>
 
       <div className="search-panel">
@@ -4534,12 +4573,9 @@ function SearchPage() {
 
         {status === "default" ? (
           <div className="search-default-state" id="state-default">
-            <div>
-              <Stethoscope size={24} aria-hidden="true" />
-              <div>
-                <h2>증상이 있으신가요?</h2>
-              <p>Aiga에게 직접 물어보세요. 콘텐츠, 디렉터리, 커뮤니티 결과를 분리해 보여드려요.</p>
-              </div>
+            <div className="search-cta-copy">
+              <h2>증상이 있으신가요?</h2>
+              <p>Aiga에게 직접 물어보세요. 명의 및 병원을 추천해드려요.</p>
             </div>
             <button
               className="public-primary-button"
@@ -4586,16 +4622,25 @@ function SearchPage() {
 
         {status === "empty" ? (
           <div className="search-state-message empty" id="state-empty">
-            <Search size={32} aria-hidden="true" />
-            <h2>검색 결과가 없습니다</h2>
-            <p>질환명, 병원명, 의사 이름이 정확한지 확인해 주세요.</p>
-            <button
-              className="public-ghost-button"
-              onClick={() => requestAuth("Aiga 질문하기", () => navigate("/my"))}
-              type="button"
-            >
-              질문하기
-            </button>
+            <h2 className="sr-only">검색 결과가 없습니다</h2>
+            <span className="search-empty-illust" aria-hidden="true">
+              <Search size={30} />
+            </span>
+            <p className="search-empty-title">질환명, 병원명, 의사 이름이 정확한지 확인해 주세요.</p>
+            <span className="search-empty-sub">검색어가 정확한지 확인하거나 다른 키워드로 검색해보세요.</span>
+            <div className="search-cta-card">
+              <div className="search-cta-copy">
+                <h3>원하는 의사를 못 찾으셨나요?</h3>
+                <p>Aiga챗봇에게 물어보시면 질환에 딱 맞는 명의를 찾을 수 있어요.</p>
+              </div>
+              <button
+                className="public-primary-button"
+                onClick={() => requestAuth("Aiga 질문하기", () => navigate("/my"))}
+                type="button"
+              >
+                질문하기
+              </button>
+            </div>
           </div>
         ) : null}
 
@@ -5532,19 +5577,17 @@ function CommunityPage() {
   return (
     <section className="community-screen" data-screen="SCR-007" data-state={screenState}>
       <div className="community-header">
-        <span className="public-eyebrow">
-          <MessageCircle size={16} aria-hidden="true" />
-          Community
-        </span>
         <h1>커뮤니티</h1>
-        <p>게시물 내용은 개인 경험에 기반한 참고용 정보입니다.</p>
+        <button aria-label="검색" className="community-icon-button" type="button">
+          <Search size={22} aria-hidden="true" />
+        </button>
       </div>
 
       <div className="community-toolbar">
         <div className="community-tabs" role="tablist" aria-label="커뮤니티 분류">
           {([
-            ["disease", "질병별"],
-            ["dept", "진료과별"],
+            ["disease", "질병"],
+            ["dept", "진료과"],
           ] as const).map(([tab, label]) => (
             <button
               aria-selected={activeTab === tab}
@@ -5582,6 +5625,11 @@ function CommunityPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="community-notice">
+          <AlertCircle size={16} aria-hidden="true" />
+          <span>게시물 내용은 개인 경험에 기반한 참고용 정보입니다.</span>
         </div>
 
         <div className="community-sortbar" data-field="sort" data-testid="scr-007-fld-02">
