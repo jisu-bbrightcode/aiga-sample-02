@@ -16,15 +16,14 @@ import { AppShell } from "./App";
  * screens, the client router (navigate → popstate → setRoute), and the shared
  * auth session are composed together:
  *
- *   J1 navigation continuity + the list→detail linkage gap  (SCR-005 → SCR-006)
+ *   J1 navigation continuity + list→detail data linkage      (SCR-005 → SCR-006)
  *   J2 auth session resumes across a screen change           (SCR-007 → SCR-009)
  *   J3 editor draft durability across navigation             (SCR-009 → SCR-007)
  *   J4 search view-limit is session-scoped, not screen-scoped(SCR-004 + auth)
  *
  * Findings that fall out of these journeys are recorded in the BBR-1149 full-QA
- * report document and tracked as follow-up issues; where a journey pins a
- * currently-defective behavior it is labelled DEFECT and asserted against the
- * observed state so the suite stays green and acts as a regression tripwire.
+ * report document and tracked as follow-up issues. These journeys assert the
+ * intended cross-screen behavior unless a known follow-up is called out inline.
  */
 
 const DRAFT_KEY = "aiga.content-editor.draft";
@@ -49,7 +48,7 @@ describe("Content Catalog — full QA cross-screen journeys (BBR-1149)", () => {
     window.localStorage.clear();
   });
 
-  it("J1: Home → 목록 → card activation swaps to the detail route (and exposes the list→detail linkage gap)", async () => {
+  it("J1: Home → 목록 → card activation swaps to the selected detail route", async () => {
     const user = userEvent.setup();
     const { container } = renderShell("/");
 
@@ -68,18 +67,17 @@ describe("Content Catalog — full QA cross-screen journeys (BBR-1149)", () => {
       screen.queryByRole("tablist", { name: "카테고리" }),
     ).not.toBeInTheDocument();
 
-    // DEFECT (BBR-1149 finding #1): directory/list item ids (kim-geongang, …)
-    // have no matching `itemDetails` record — only the seeded "ITEM-0001" does.
-    // So every list→detail hop resolves to the empty state instead of the item.
-    // Pinned to current behavior; tracked in the entity/linkage follow-up.
-    expect(screen.getByText("표시할 상세 정보가 없어요.")).toBeInTheDocument();
+    // The selected directory id resolves to its SCR-006 detail, not the unknown-id empty state.
+    expect(screen.getByRole("heading", { name: "김건강" })).toBeInTheDocument();
+    expect(screen.getByText("서울대학교병원 · 내분비대사내과")).toBeInTheDocument();
+    expect(screen.queryByText("표시할 상세 정보가 없어요.")).not.toBeInTheDocument();
   });
 
-  it("J1b: the seeded detail id renders a real detail (isolates the linkage gap to id mismatch)", () => {
+  it("J1b: the seeded detail id renders a real detail directly on the SCR-006 route", () => {
     renderShell("/items/ITEM-0001");
 
-    // Contrast with J1: the one seeded id resolves, so the detail screen itself
-    // is healthy — the J1 empty state is purely a list↔detail id mismatch.
+    // The seeded id resolves directly, exercising the SCR-006 detail route on
+    // its own — complements J1, where the id arrives via a SCR-005 card click.
     expect(
       screen.getByRole("heading", { name: "선택한 항목의 상세 정보" }),
     ).toBeInTheDocument();
