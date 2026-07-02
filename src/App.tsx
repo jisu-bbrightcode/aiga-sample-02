@@ -5,6 +5,7 @@ import {
   Bell,
   BookOpen,
   Bookmark,
+  Bot,
   ChevronRight,
   CheckCircle2,
   Eye,
@@ -30,6 +31,7 @@ import {
   ShieldCheck,
   Star,
   Stethoscope,
+  TrendingUp,
   UserPlus,
   UserRound,
   Video,
@@ -3294,13 +3296,9 @@ function PublicShell({ route }: { route: PublicRoute }) {
   return (
     <div className="public-shell">
       <header className="public-topbar">
-        <PublicLink ariaLabel="Aiga 홈" className="public-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            A
-          </span>
-          <span>Aiga</span>
+        <PublicLink ariaLabel="AIGA 홈" className="public-brand" href="/">
+          <img className="aiga-wordmark" src="/aiga-wordmark.svg" alt="AIGA" height={20} width={76} />
         </PublicLink>
-
         <nav className="public-nav" aria-label="주요 메뉴">
           <PublicLink href="/">홈</PublicLink>
           <PublicLink href="/browse">브라우즈</PublicLink>
@@ -3310,20 +3308,13 @@ function PublicShell({ route }: { route: PublicRoute }) {
           <PublicLink href="/doctor-verification">의사 인증</PublicLink>
           <PublicLink href="/my">마이페이지</PublicLink>
         </nav>
-
         <div className="public-header-actions">
           {user ? (
             <>
               <span className="public-tier-badge" aria-label="현재 회원 등급">
-                <ShieldCheck size={16} aria-hidden="true" />
                 {membershipTierLabels[user.tier]}
               </span>
-              <span className="public-user-badge">
-                <UserRound size={16} aria-hidden="true" />
-                {user.name}
-              </span>
               <button className="public-ghost-button" onClick={logout} type="button">
-                <LogOut size={17} aria-hidden="true" />
                 로그아웃
               </button>
             </>
@@ -3338,12 +3329,19 @@ function PublicShell({ route }: { route: PublicRoute }) {
                 onClick={() => navigate("/login")}
                 type="button"
               >
-                <LogIn size={17} aria-hidden="true" />
                 로그인
               </button>
             </>
           )}
         </div>
+        <button
+          className="public-header-search"
+          onClick={() => navigate("/search")}
+          type="button"
+          aria-label="검색"
+        >
+          <Search size={20} aria-hidden="true" />
+        </button>
       </header>
 
       <main>
@@ -3486,24 +3484,24 @@ function HomePage() {
 
       <nav className="scr-home-bottom-nav" aria-label="하단 메뉴">
         <button className="active" data-nav="SCR-001" onClick={() => navigate("/")} type="button">
-          <House size={18} aria-hidden="true" />
+          <House size={22} aria-hidden="true" />
           <span>홈</span>
         </button>
         <button data-nav="SCR-004" onClick={() => navigate("/search")} type="button">
-          <Search size={18} aria-hidden="true" />
-          <span>검색</span>
+          <Bot size={22} aria-hidden="true" />
+          <span>AI 의사찾기</span>
         </button>
         <button data-nav="SCR-005" onClick={() => navigate("/items")} type="button">
-          <List size={18} aria-hidden="true" />
-          <span>목록</span>
+          <Stethoscope size={22} aria-hidden="true" />
+          <span>의사 검색</span>
         </button>
         <button data-nav="SCR-007" onClick={() => navigate("/community")} type="button">
-          <MessageCircle size={18} aria-hidden="true" />
+          <MessageCircle size={22} aria-hidden="true" />
           <span>커뮤니티</span>
         </button>
         <button data-nav="SCR-010" onClick={() => navigate("/my")} type="button">
-          <UserRound size={18} aria-hidden="true" />
-          <span>마이</span>
+          <UserRound size={22} aria-hidden="true" />
+          <span>MY</span>
         </button>
       </nav>
     </section>
@@ -3583,20 +3581,24 @@ function HomeDefaultState({
                 onClick={() => onPrimaryAction(doctor.name)}
                 type="button"
               >
-                <span className="scr-rank-badge">{doctor.rank}</span>
-                <span className="scr-avatar" aria-hidden="true">
-                  {doctor.name.slice(0, 1)}
-                </span>
-                <span className="scr-doctor-copy">
-                  <strong>
-                    {doctor.name}
-                    {doctor.verified ? <em>의사 인증</em> : null}
-                  </strong>
-                  <span>
-                    {doctor.hospital} · {doctor.department}
+                <span className="scr-doctor-info">
+                  <span className="scr-doctor-name-row">
+                    <strong className="scr-doctor-name">{doctor.name}</strong>
+                    <span className="scr-rank-indicator" aria-label={`순위 ${doctor.rank}`}>
+                      <TrendingUp size={10} aria-hidden="true" />
+                      {doctor.rank}
+                    </span>
+                    {doctor.verified ? <em className="scr-verified-badge">의사 인증</em> : null}
+                  </span>
+                  <span className="scr-doctor-detail">
+                    <span className="scr-doctor-hospital">{doctor.hospital}</span>
+                    <span className="scr-dot" aria-hidden="true">•</span>
+                    <span className="scr-doctor-dept">{doctor.department}</span>
                   </span>
                 </span>
-                <ChevronRight size={18} aria-hidden="true" />
+                <span className="scr-doctor-avatar" aria-hidden="true">
+                  {doctor.name.slice(0, 1)}
+                </span>
               </button>
             </li>
           ))}
