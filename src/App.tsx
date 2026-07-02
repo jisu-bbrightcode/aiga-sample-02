@@ -49,6 +49,9 @@ import {
   useState,
 } from "react";
 import { flushSync } from "react-dom";
+// BBR-1193: net-new screens (AI 챗봇 / 명의 찾기 / 공지·약관·의견) live in their own
+// isolated module + router, mounted only for their additive path prefixes.
+import { isNewScreenRoute, NewScreensApp } from "./newScreens";
 import {
   adminContentItems,
   adminContentQueueLabels,
@@ -108,6 +111,10 @@ function navigate(path: string) {
   window.history.pushState({}, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
+
+// Re-exported for the isolated new-screen module (BBR-1193) so its pages can drive
+// the same history-based SPA navigation without duplicating the helper.
+export { navigate };
 
 type PublicRoute = {
   itemId?: string;
@@ -6732,22 +6739,38 @@ export function AppShell() {
 }
 
 export default function App() {
-  const [isAdminRoute, setIsAdminRoute] = useState(() =>
-    window.location.pathname.startsWith("/admin"),
-  );
+  const [surface, setSurface] = useState(() => resolveAppSurface(window.location.pathname));
 
   useEffect(() => {
     const handleRouteChange = () => {
-      flushSync(() => setIsAdminRoute(window.location.pathname.startsWith("/admin")));
+      flushSync(() => setSurface(resolveAppSurface(window.location.pathname)));
     };
     window.addEventListener("popstate", handleRouteChange);
 
     return () => window.removeEventListener("popstate", handleRouteChange);
   }, []);
 
+  if (surface === "newScreen") {
+    return <NewScreensApp />;
+  }
+
   return (
     <DoctorVerificationProvider>
-      {isAdminRoute ? <AdminApp /> : <AppShellContent />}
+      {surface === "admin" ? <AdminApp /> : <AppShellContent />}
     </DoctorVerificationProvider>
   );
+}
+
+type AppSurface = "admin" | "newScreen" | "public";
+
+function resolveAppSurface(pathname: string): AppSurface {
+  if (pathname.startsWith("/admin")) {
+    return "admin";
+  }
+
+  if (isNewScreenRoute(pathname)) {
+    return "newScreen";
+  }
+
+  return "public";
 }

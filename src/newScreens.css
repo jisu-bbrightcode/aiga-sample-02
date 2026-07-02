@@ -1,0 +1,963 @@
+/* BBR-1193 — 신규 화면(AI 챗봇 / 명의 찾기 / 공지·약관·의견) local styles.
+   All selectors are namespaced `.ns-*` so nothing here can collide with the shared
+   styles.css. Colors reference the Figma design tokens declared in styles.css :root
+   (--primary-500 #3774e8, --secondary #00ca80, gray scale, Pretendard). */
+
+.ns-page {
+  background: #ffffff;
+  color: var(--gray-900);
+  display: flex;
+  flex-direction: column;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0 auto;
+  max-width: 480px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ---- Blue header bar (명의찾기/공지/의견/약관) ---- */
+.ns-blue-header {
+  align-items: center;
+  background: var(--primary-500);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.ns-blue-header h1 {
+  font: var(--title-medium);
+  font-size: 18px;
+  margin: 0;
+}
+
+.ns-blue-header-close {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+}
+
+.ns-icon-button {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-700);
+  cursor: pointer;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+}
+
+.ns-icon-button:hover {
+  background: var(--gray-50);
+}
+
+.ns-accent-blue {
+  color: var(--primary-500);
+}
+
+/* ---- AI 챗봇 ---- */
+.ns-chatbot-page {
+  background: #ffffff;
+}
+
+.ns-chatbot-header {
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 12px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.ns-chatbot-logo {
+  margin-right: auto;
+  margin-left: 4px;
+}
+
+.ns-chatbot-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+.ns-login-chip {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  color: var(--gray-700);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.ns-chatbot-welcome {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px 20px 20px;
+}
+
+.ns-chatbot-brand {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.ns-chatbot-brand h2 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ns-chatbot-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Chat bubbles (shared by welcome + thread) */
+.ns-chat-bubble {
+  border-radius: 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.ns-chat-bubble-bot {
+  background: var(--gray-50);
+  color: var(--gray-700);
+}
+
+.ns-chat-bubble-bot strong {
+  color: var(--gray-900);
+}
+
+.ns-chat-bubble-bot strong.ns-accent-blue {
+  color: var(--primary-500);
+}
+
+.ns-chat-bubble-user {
+  align-self: flex-end;
+  background: var(--primary-500);
+  color: #ffffff;
+  max-width: 80%;
+}
+
+/* Chatbot bottom input */
+.ns-chat-input {
+  align-items: center;
+  background: #ffffff;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  position: sticky;
+  bottom: 0;
+}
+
+.ns-chat-input input {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 22px;
+  color: var(--gray-900);
+  flex: 1;
+  font-size: 15px;
+  outline: none;
+  padding: 12px 16px;
+}
+
+.ns-chat-input input::placeholder {
+  color: var(--gray-300);
+}
+
+.ns-chat-send {
+  align-items: center;
+  background: var(--primary-500);
+  border: none;
+  border-radius: 50%;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.ns-chat-send:disabled {
+  background: var(--gray-200);
+}
+
+/* Chatbot conversation list */
+.ns-chatbot-list-header {
+  align-items: center;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.ns-chatbot-list-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ns-conversation-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 8px 16px 24px;
+}
+
+.ns-conversation-group-label {
+  color: var(--gray-300);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 18px 0 6px;
+}
+
+.ns-conversation-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  position: relative;
+}
+
+.ns-conversation-title {
+  background: transparent;
+  border: none;
+  color: var(--gray-900);
+  cursor: pointer;
+  flex: 1;
+  font-size: 15px;
+  overflow: hidden;
+  padding: 8px 0;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ns-conversation-menu-wrap {
+  position: relative;
+}
+
+.ns-conversation-menu {
+  background: #ffffff;
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(31, 35, 41, 0.14);
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: 34px;
+  z-index: 10;
+}
+
+.ns-conversation-menu button {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-700);
+  cursor: pointer;
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.ns-conversation-menu button:hover {
+  background: var(--gray-50);
+}
+
+.ns-conversation-menu .ns-menu-danger {
+  color: var(--accent-500);
+}
+
+/* Chatbot chat thread */
+.ns-chat-thread {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.ns-chat-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+}
+
+.ns-chat-bot-mark {
+  align-items: center;
+  background: var(--primary-50);
+  border-radius: 50%;
+  color: var(--primary-500);
+  display: flex;
+  flex: 0 0 auto;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.ns-chat-row .ns-chat-bubble {
+  max-width: 82%;
+}
+
+.ns-recommend-cards {
+  display: flex;
+  gap: 10px;
+  margin-left: 36px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ns-recommend-card {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  text-align: center;
+  width: 108px;
+}
+
+.ns-recommend-card strong {
+  color: var(--primary-600);
+  font-size: 14px;
+}
+
+.ns-recommend-card span {
+  color: var(--gray-500);
+  font-size: 12px;
+}
+
+.ns-recommend-dept {
+  color: var(--gray-300) !important;
+}
+
+.ns-chat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 36px;
+}
+
+.ns-chat-chip {
+  background: var(--primary-50);
+  border: 1px solid var(--primary-100);
+  border-radius: 18px;
+  color: var(--primary-600);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+
+/* Shared avatar placeholder */
+.ns-avatar {
+  border-radius: 50%;
+  flex: 0 0 auto;
+  height: 56px;
+  width: 56px;
+}
+
+.ns-recommend-card .ns-avatar {
+  height: 44px;
+  width: 44px;
+}
+
+.ns-experts-suggestions .ns-avatar,
+.ns-suggestion-icon {
+  height: 28px;
+  width: 28px;
+}
+
+/* ---- 명의 찾기 ---- */
+.ns-experts-page {
+  padding-bottom: 72px;
+}
+
+.ns-experts-search {
+  align-items: center;
+  background: var(--gray-50);
+  border-radius: 12px;
+  color: var(--gray-300);
+  display: flex;
+  gap: 8px;
+  margin: 12px 16px;
+  padding: 12px 14px;
+}
+
+.ns-experts-search input {
+  background: transparent;
+  border: none;
+  color: var(--gray-900);
+  flex: 1;
+  font-size: 15px;
+  outline: none;
+}
+
+.ns-experts-search input::placeholder {
+  color: var(--gray-300);
+}
+
+.ns-experts-clear {
+  background: transparent;
+  border: none;
+  color: var(--gray-300);
+  cursor: pointer;
+  display: flex;
+  padding: 0;
+}
+
+.ns-experts-suggestions {
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(31, 35, 41, 0.1);
+  list-style: none;
+  margin: 0 16px;
+  padding: 6px;
+}
+
+.ns-experts-suggestions button {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.ns-experts-suggestions button:hover {
+  background: var(--gray-50);
+}
+
+.ns-suggestion-icon {
+  align-items: center;
+  color: var(--gray-300);
+  display: flex;
+  justify-content: center;
+}
+
+.ns-suggestion-label {
+  color: var(--gray-900);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ns-suggestion-meta {
+  color: var(--gray-500);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ns-suggestion-tag {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+  padding: 3px 8px;
+}
+
+.ns-suggestion-tag-condition {
+  background: var(--secondary-50, #e6faf2);
+  color: var(--secondary, #00ca80);
+}
+
+.ns-suggestion-tag-expert {
+  background: var(--primary-50);
+  color: var(--primary-500);
+}
+
+.ns-experts-tabs {
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 0 16px;
+}
+
+.ns-experts-tabs button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--gray-300);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 0;
+}
+
+.ns-experts-tabs button.active {
+  border-bottom-color: var(--gray-900);
+  color: var(--gray-900);
+}
+
+.ns-experts-subtags {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 14px 16px;
+}
+
+.ns-experts-subtags button {
+  background: #ffffff;
+  border: 1px solid var(--primary-200);
+  border-radius: 18px;
+  color: var(--primary-500);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.ns-experts-subtags button.active {
+  background: var(--primary-50);
+  font-weight: 600;
+}
+
+.ns-experts-count-row {
+  align-items: center;
+  border-top: 8px solid var(--gray-50);
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+}
+
+.ns-experts-count {
+  font-size: 14px;
+  margin: 0;
+}
+
+.ns-experts-count strong {
+  font-weight: 700;
+}
+
+.ns-experts-sorts {
+  display: flex;
+  gap: 6px;
+}
+
+.ns-experts-sorts button {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  color: var(--gray-500);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+.ns-experts-sorts button.active {
+  border-color: var(--gray-900);
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+.ns-experts-doctors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ns-doctor-row {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--gray-50);
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.ns-doctor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ns-doctor-name {
+  align-items: center;
+  color: var(--gray-900);
+  display: flex;
+  font-size: 16px;
+  font-weight: 700;
+  gap: 6px;
+}
+
+.ns-doctor-verified {
+  background: var(--primary-50);
+  border-radius: 5px;
+  color: var(--primary-600);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+.ns-doctor-hospital {
+  color: var(--primary-350);
+  font-size: 13px;
+}
+
+.ns-doctor-meta {
+  color: var(--gray-300);
+  font-size: 12px;
+}
+
+/* 명의 찾기 empty (결과없음) */
+.ns-experts-empty {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.ns-experts-empty-art {
+  align-items: center;
+  background: var(--gray-50);
+  border-radius: 50%;
+  color: var(--gray-300);
+  display: flex;
+  height: 96px;
+  justify-content: center;
+  margin-bottom: 8px;
+  width: 96px;
+}
+
+.ns-experts-empty-title {
+  color: var(--gray-900);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ns-experts-empty-desc {
+  color: var(--gray-500);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.ns-experts-empty-cta {
+  align-items: center;
+  background: var(--primary-25);
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.ns-experts-empty-cta p {
+  color: var(--gray-700);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ns-experts-empty-cta button {
+  background: var(--primary-500);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 16px;
+}
+
+/* Bottom GNB (명의 찾기) */
+.ns-bottom-nav {
+  background: #ffffff;
+  border-top: 1px solid var(--gray-100);
+  bottom: 0;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  left: 50%;
+  max-width: 480px;
+  padding: 8px 0 calc(6px + env(safe-area-inset-bottom));
+  position: fixed;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 6;
+}
+
+.ns-bottom-nav button {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--gray-300);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.ns-bottom-nav button span {
+  font-size: 11px;
+}
+
+.ns-bottom-nav button.active {
+  color: var(--primary-500);
+  font-weight: 600;
+}
+
+/* ---- 공지사항 ---- */
+.ns-notice-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ns-notice-row {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--gray-50);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.ns-notice-title {
+  color: var(--gray-900);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.ns-notice-date {
+  color: var(--gray-300);
+  font-size: 13px;
+}
+
+.ns-notice-empty {
+  align-items: center;
+  color: var(--gray-300);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.ns-notice-empty-art {
+  font-size: 40px;
+}
+
+.ns-notice-detail {
+  padding: 20px 16px 40px;
+}
+
+.ns-notice-detail h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.ns-notice-detail-date {
+  color: var(--gray-300);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.ns-notice-detail-divider {
+  background: var(--gray-100);
+  height: 1px;
+  margin-bottom: 20px;
+}
+
+.ns-notice-detail p {
+  color: var(--gray-700);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 16px;
+}
+
+.ns-notice-detail-link {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--primary-500);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 600;
+  gap: 2px;
+  padding: 0;
+}
+
+/* ---- 의견 보내기 ---- */
+.ns-feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 16px;
+}
+
+.ns-feedback-title {
+  color: var(--gray-900);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ns-feedback-form textarea {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  color: var(--gray-900);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  min-height: 160px;
+  outline: none;
+  padding: 14px;
+  resize: vertical;
+}
+
+.ns-feedback-form textarea::placeholder {
+  color: var(--gray-300);
+}
+
+.ns-feedback-form textarea:focus {
+  border-color: var(--primary-300);
+}
+
+.ns-feedback-submit {
+  background: var(--primary-100);
+  border: none;
+  border-radius: 12px;
+  color: var(--primary-600);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 15px;
+}
+
+.ns-feedback-submit:enabled {
+  background: var(--primary-500);
+  color: #ffffff;
+}
+
+.ns-feedback-submit:disabled {
+  cursor: not-allowed;
+}
+
+.ns-feedback-sent {
+  color: var(--secondary, #00ca80);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ns-feedback-notice {
+  margin-top: 6px;
+}
+
+.ns-feedback-notice-title {
+  color: var(--secondary, #00ca80);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.ns-feedback-notice p {
+  color: var(--gray-500);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ---- 이용약관 ---- */
+.ns-terms-body {
+  padding: 20px 16px 48px;
+}
+
+.ns-terms-chapter {
+  color: var(--primary-500);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 18px;
+}
+
+.ns-terms-article {
+  margin-bottom: 24px;
+}
+
+.ns-terms-article h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.ns-terms-article p {
+  color: var(--gray-700);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.ns-notfound-page .ns-notice-empty {
+  gap: 20px;
+}
