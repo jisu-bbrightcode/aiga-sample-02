@@ -20,7 +20,7 @@ feature and screen issue.
 | Base template | `product-builder-base` (materialized into this workspace) |
 | Frontend base | Vite 8 + React 19 + React Router 7 + Vitest 4 SPA |
 | Backend base | `apps/server` — Express + Drizzle ORM + better-auth (TypeScript, ESM, hexagonal per-feature) |
-| Frontend base binding commit | `feat(infra): frontend base + shared infra baseline (BBR-1117)` — see `git log` |
+| Frontend base binding commit | `7b9e687` — feat(infra): frontend base + shared infra baseline (BBR-1117) |
 | Backend base | committed across BBR-1169 (shared server wiring) + feature-BE commits on `main` |
 | Integration model | local `main` is the integration branch; push + release tag owned by BBR-1165 |
 
