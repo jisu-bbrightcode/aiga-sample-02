@@ -22,55 +22,52 @@ describe("SCR-005 content list (Content Catalog)", () => {
     expect(screen.getByTestId("scr-005-fld-03")).toBeInTheDocument();
     expect(screen.getByTestId("scr-005-fld-04")).toBeInTheDocument();
 
-    // Default subcategory 위암 → both 위암 doctors are visible.
+    // Default category 자유(free) → public ContentItem cards are visible.
     const list = screen.getByTestId("scr-005-fld-03");
-    expect(within(list).getByText("김건강")).toBeInTheDocument();
-    expect(within(list).getByText("박건강")).toBeInTheDocument();
+    expect(within(list).getByText("폐암 치료 체크리스트")).toBeInTheDocument();
+    expect(within(list).getByText("항암 치료 중 식사 기록")).toBeInTheDocument();
+    expect(within(list).queryByText("김건강")).not.toBeInTheDocument();
 
-    // Total count comes from itemTotalsBySubcategory (위암 = 20).
-    expect(screen.getByText("20")).toBeInTheDocument();
+    const toolbar = screen.getByTestId("scr-005-fld-02").closest(".scr-items-toolbar");
+    expect(toolbar).not.toBeNull();
+    expect(within(toolbar as HTMLElement).getByText("2")).toBeInTheDocument();
   });
 
   it("re-sorts the list when a different sort option is chosen", async () => {
     const user = userEvent.setup();
     renderShell();
 
-    // Default sort = 환자 경험 (patientScore): 김건강(98) before 박건강(95).
+    // Default sort = 최신순: newest published ContentItem first.
     let cards = screen.getAllByTestId("scr-005-act-03");
-    expect(cards[0]).toHaveTextContent("김건강");
+    expect(cards[0]).toHaveTextContent("폐암 치료 체크리스트");
 
-    // 동료 추천 (peerScore): 박건강(97) before 김건강(93).
-    await user.click(screen.getByRole("radio", { name: "동료 추천" }));
+    await user.click(screen.getByRole("radio", { name: "조회순" }));
     cards = screen.getAllByTestId("scr-005-act-03");
-    expect(cards[0]).toHaveTextContent("박건강");
+    expect(cards[0]).toHaveTextContent("항암 치료 중 식사 기록");
 
-    // 거리 (distanceKm asc): 김건강(1.2km) before 박건강(3.1km).
-    await user.click(screen.getByRole("radio", { name: "거리" }));
+    await user.click(screen.getByRole("radio", { name: "제목순" }));
     cards = screen.getAllByTestId("scr-005-act-03");
-    expect(cards[0]).toHaveTextContent("김건강");
+    expect(cards[0]).toHaveTextContent("항암 치료 중 식사 기록");
   });
 
   it("filters by subcategory and shows the empty state when there are no matches", async () => {
     const user = userEvent.setup();
     renderShell();
 
-    // 갑상선암 has no directory items → empty state panel.
-    await user.click(screen.getByRole("button", { name: "갑상선암" }));
+    await user.click(screen.getByRole("tab", { name: "공지" }));
 
     expect(screen.getByText("검색 결과가 없어요")).toBeInTheDocument();
     expect(screen.queryByTestId("scr-005-fld-03")).not.toBeInTheDocument();
   });
 
-  it("switching top-level category resets the active subcategory group", async () => {
+  it("switching category shows only ContentItem records for that category", async () => {
     const user = userEvent.setup();
     renderShell();
 
-    await user.click(screen.getByRole("tab", { name: "척추/관절" }));
+    await user.click(screen.getByRole("tab", { name: "질문/답변" }));
 
-    // First subcategory chip of the new group becomes active/available.
-    expect(screen.getByRole("button", { name: "허리디스크" })).toBeInTheDocument();
-    // 척추/관절 has no seeded directory items → empty state.
-    expect(screen.getByText("검색 결과가 없어요")).toBeInTheDocument();
+    expect(screen.getByText("진료 전 질문 준비법")).toBeInTheDocument();
+    expect(screen.queryByText("폐암 치료 체크리스트")).not.toBeInTheDocument();
   });
 
   it("navigates to the detail route (SCR-006) when a list card is activated", async () => {
@@ -79,7 +76,7 @@ describe("SCR-005 content list (Content Catalog)", () => {
 
     await user.click(screen.getAllByTestId("scr-005-act-03")[0]);
 
-    expect(window.location.pathname).toBe("/items/kim-geongang");
+    expect(window.location.pathname).toBe("/items/content-lung-checklist");
   });
 
   it("renders the loading state when forced via query param", () => {

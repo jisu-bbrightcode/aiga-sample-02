@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { UserEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import App, { AppShell } from "./App";
+import { adminContentItems } from "./adminData";
 import { signInAdmin } from "./auth";
 
 // BBR-1136 [FE QA] 커뮤니티/게시글/댓글/반응 (Community & Posts)
@@ -206,6 +207,18 @@ describe("§C Reactions (반응)", () => {
 });
 
 describe("§D Admin content moderation (SCR-013)", () => {
+  it("keeps report/delete as queue facets instead of ContentItem lifecycle statuses", () => {
+    const contentStatuses = adminContentItems.map((item) => item.status);
+
+    expect(new Set(contentStatuses)).toEqual(new Set(["published", "hidden", "draft"]));
+    expect(contentStatuses).not.toContain("pending");
+    expect(contentStatuses).not.toContain("pending_review");
+    expect(contentStatuses).not.toContain("reported");
+    expect(contentStatuses).not.toContain("deleted");
+    expect(adminContentItems.some((item) => item.reports > 0)).toBe(true);
+    expect(adminContentItems.some((item) => item.deletedAt !== null)).toBe(true);
+  });
+
   it("lists a reported community post with its report count", () => {
     renderAdmin();
 

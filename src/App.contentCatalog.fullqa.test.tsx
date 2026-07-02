@@ -60,26 +60,26 @@ describe("Content Catalog — full QA cross-screen journeys (BBR-1149)", () => {
 
     // Activating a list card routes to the detail screen within the same app.
     await user.click(screen.getAllByTestId("scr-005-act-03")[0]);
-    expect(window.location.pathname).toBe("/items/kim-geongang");
+    expect(window.location.pathname).toBe("/items/content-lung-checklist");
 
     // The list toolbar is unmounted → the router handed off to SCR-006.
     expect(
       screen.queryByRole("tablist", { name: "카테고리" }),
     ).not.toBeInTheDocument();
 
-    // The selected directory id resolves to its SCR-006 detail, not the unknown-id empty state.
-    expect(screen.getByRole("heading", { name: "김건강" })).toBeInTheDocument();
-    expect(screen.getByText("서울대학교병원 · 내분비대사내과")).toBeInTheDocument();
+    // The selected ContentItem id resolves to its SCR-006 detail, not a directory profile.
+    expect(screen.getByRole("heading", { name: "폐암 치료 체크리스트" })).toBeInTheDocument();
+    expect(screen.queryByText("서울대학교병원 · 내분비대사내과")).not.toBeInTheDocument();
     expect(screen.queryByText("표시할 상세 정보가 없어요.")).not.toBeInTheDocument();
   });
 
   it("J1b: the seeded detail id renders a real detail directly on the SCR-006 route", () => {
-    renderShell("/items/ITEM-0001");
+    renderShell("/items/content-lung-checklist");
 
     // The seeded id resolves directly, exercising the SCR-006 detail route on
     // its own — complements J1, where the id arrives via a SCR-005 card click.
     expect(
-      screen.getByRole("heading", { name: "선택한 항목의 상세 정보" }),
+      screen.getByRole("heading", { name: "폐암 치료 체크리스트" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("scr-006-fld-01")).toBeInTheDocument();
   });
@@ -133,7 +133,7 @@ describe("Content Catalog — full QA cross-screen journeys (BBR-1149)", () => {
 
     // First guest search consumes the single allowance and returns results.
     await user.type(queryInput, "폐암");
-    expect(await screen.findByText("김건강")).toBeInTheDocument();
+    expect(await screen.findByText("폐암 치료 체크리스트")).toBeInTheDocument();
 
     // Second guest search trips the view-limit gate.
     await user.clear(queryInput);

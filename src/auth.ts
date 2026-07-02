@@ -5,7 +5,14 @@ export type AdminSession = {
   signedInAt: string;
 };
 
+export type AdminSignInResult =
+  | { status: "success"; session: AdminSession }
+  | { status: "permission" }
+  | { status: "error" };
+
 const SESSION_KEY = "aiga.admin.session";
+const ADMIN_EMAIL = "admin@example.com";
+const ADMIN_PASSWORD = "admin";
 
 export function getAdminSession(): AdminSession | null {
   const rawSession = window.localStorage.getItem(SESSION_KEY);
@@ -29,11 +36,15 @@ export function getAdminSession(): AdminSession | null {
   }
 }
 
-export function signInAdmin(email: string, password: string): AdminSession | null {
+export function signInAdmin(email: string, password: string): AdminSignInResult {
   const normalizedEmail = email.trim().toLowerCase();
 
-  if (normalizedEmail !== "admin@aiga.test" || password !== "admin1234") {
-    return null;
+  if (normalizedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+    if (normalizedEmail.endsWith("@example.com")) {
+      return { status: "permission" };
+    }
+
+    return { status: "error" };
   }
 
   const session: AdminSession = {
@@ -44,7 +55,7 @@ export function signInAdmin(email: string, password: string): AdminSession | nul
   };
 
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  return session;
+  return { status: "success", session };
 }
 
 export function clearAdminSession() {

@@ -14,18 +14,18 @@ describe("SCR-006 content detail (Content Catalog)", () => {
   });
 
   it("renders the default detail with header, metadata, and related actions", () => {
-    renderShell("/items/ITEM-0001");
+    renderShell("/items/content-lung-checklist");
 
     expect(
-      screen.getByRole("heading", { name: "선택한 항목의 상세 정보" }),
+      screen.getByRole("heading", { name: "폐암 치료 체크리스트" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("scr-006-fld-01")).toBeInTheDocument();
     expect(screen.getByTestId("scr-006-fld-02")).toBeInTheDocument();
 
     const metadata = screen.getByTestId("scr-006-fld-03");
-    expect(within(metadata).getByText("활성")).toBeInTheDocument();
-    expect(within(metadata).getByText("공개")).toBeInTheDocument();
-    expect(within(metadata).getByText("2026.07.01")).toBeInTheDocument();
+    expect(within(metadata).getByText("published")).toBeInTheDocument();
+    expect(within(metadata).getByText("free")).toBeInTheDocument();
+    expect(within(metadata).getByText("폐암")).toBeInTheDocument();
 
     expect(screen.getByTestId("scr-006-act-01")).toBeInTheDocument();
     expect(screen.getByTestId("scr-006-act-02")).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe("SCR-006 content detail (Content Catalog)", () => {
 
   it("gates the primary action behind auth and completes it after login", async () => {
     const user = userEvent.setup();
-    renderShell("/items/ITEM-0001");
+    renderShell("/items/content-lung-checklist");
 
     await user.click(screen.getByTestId("scr-006-act-01"));
 
@@ -49,15 +49,15 @@ describe("SCR-006 content detail (Content Catalog)", () => {
 
   it("selects a related item without requiring auth", async () => {
     const user = userEvent.setup();
-    renderShell("/items/ITEM-0001");
+    renderShell("/items/content-lung-checklist");
 
     await user.click(screen.getByTestId("scr-006-act-02"));
 
-    expect(screen.getByText("관련 항목 1 선택 완료")).toBeInTheDocument();
+    expect(screen.getByText("저장하기 선택 완료")).toBeInTheDocument();
   });
 
   it("shows the empty state for an unknown item id", () => {
-    renderShell("/items/does-not-exist");
+    renderShell("/items/kim-geongang");
 
     expect(screen.getByText("표시할 상세 정보가 없어요.")).toBeInTheDocument();
     expect(screen.queryByTestId("scr-006-fld-01")).not.toBeInTheDocument();
@@ -65,26 +65,26 @@ describe("SCR-006 content detail (Content Catalog)", () => {
 
   it("recovers from the error state via retry", async () => {
     const user = userEvent.setup();
-    renderShell("/items/ITEM-0001?state=error");
+    renderShell("/items/content-lung-checklist?state=error");
 
     expect(screen.getByText("일시적인 문제가 발생했어요.")).toBeInTheDocument();
 
     await user.click(screen.getByTestId("scr-006-retry"));
 
     expect(
-      screen.getByRole("heading", { name: "선택한 항목의 상세 정보" }),
+      screen.getByRole("heading", { name: "폐암 치료 체크리스트" }),
     ).toBeInTheDocument();
   });
 
   it("renders the permission state when forced via query param", () => {
-    renderShell("/items/ITEM-0001?state=permission");
+    renderShell("/items/content-lung-checklist?state=permission");
 
     expect(screen.getByText("접근 권한이 없어요.")).toBeInTheDocument();
     expect(screen.queryByTestId("scr-006-fld-01")).not.toBeInTheDocument();
   });
 
   it("renders the loading state when forced via query param", () => {
-    renderShell("/items/ITEM-0001?state=loading");
+    renderShell("/items/content-lung-checklist?state=loading");
 
     expect(screen.getByRole("status", { name: "상세 정보를 불러오는 중" })).toBeInTheDocument();
   });

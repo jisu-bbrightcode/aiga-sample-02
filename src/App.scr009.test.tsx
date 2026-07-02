@@ -46,6 +46,9 @@ describe("SCR-009 content editor (Content Catalog)", () => {
     expect(screen.getByTestId("scr-009-fld-02")).toBeInTheDocument();
     expect(screen.getByTestId("scr-009-fld-03")).toBeInTheDocument();
     expect(screen.getByTestId("scr-009-fld-04")).toBeInTheDocument();
+    expect(screen.getByTestId("scr-009-fld-05")).toBeInTheDocument();
+    expect(screen.getByTestId("scr-009-fld-06")).toBeInTheDocument();
+    expect(screen.getByLabelText("상태")).toHaveValue("draft");
 
     // Empty draft → save disabled (required title + body missing).
     expect(screen.getByTestId("scr-009-act-01")).toBeDisabled();
@@ -67,6 +70,8 @@ describe("SCR-009 content editor (Content Catalog)", () => {
 
     await user.type(screen.getByLabelText("제목"), "위암 정기검진 정리");
     await user.selectOptions(screen.getByLabelText("카테고리"), "free");
+    await user.type(screen.getByLabelText("요약"), "검진 전후로 확인할 핵심 내용을 정리했습니다.");
+    await user.type(screen.getByLabelText("질환 태그"), "위암, 정기검진");
     await user.type(screen.getByLabelText("내용"), "검진 주기와 준비물을 공유합니다.");
 
     await user.click(screen.getByTestId("scr-009-act-01"));
@@ -77,6 +82,9 @@ describe("SCR-009 content editor (Content Catalog)", () => {
     expect(stored).toMatchObject({
       title: "위암 정기검진 정리",
       category: "free",
+      conditionTags: ["위암", "정기검진"],
+      status: "draft",
+      summary: "검진 전후로 확인할 핵심 내용을 정리했습니다.",
       body: "검진 주기와 준비물을 공유합니다.",
     });
     expect(stored.savedAt).toEqual(expect.any(String));

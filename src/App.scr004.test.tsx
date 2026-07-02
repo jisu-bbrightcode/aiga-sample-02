@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AppShell } from "./App";
@@ -44,23 +44,35 @@ describe("SCR-004 integrated search", () => {
 
     await user.type(screen.getByTestId("scr-004-fld-01"), "폐암");
 
-    expect(await screen.findByText("김건강")).toBeInTheDocument();
+    expect(await screen.findByText("폐암 치료 체크리스트")).toBeInTheDocument();
     expect(screen.getByTestId("scr-004-fld-02")).toBeInTheDocument();
     expect(screen.getByTestId("scr-004-fld-03")).toBeInTheDocument();
     expect(screen.getByTestId("scr-004-fld-04")).toBeInTheDocument();
+    expect(screen.getAllByTestId("scr-004-act-02")).toHaveLength(1);
+    expect(screen.getByTestId("scr-004-act-02")).toHaveAttribute("data-result-type", "content");
 
     await user.click(screen.getByRole("tab", { name: "커뮤니티 (1)" }));
 
     expect(screen.getByText("폐암 수술 후 회복 경험")).toBeInTheDocument();
+    expect(screen.getAllByTestId("scr-004-act-02")).toHaveLength(1);
+    expect(screen.getByTestId("scr-004-act-02")).toHaveAttribute("data-result-type", "community");
 
-    await user.click(screen.getByRole("button", { name: "병원" }));
+    await user.click(screen.getByRole("button", { name: "디렉터리" }));
 
-    expect(await screen.findByText("서울대학교병원")).toBeInTheDocument();
+    expect(await screen.findByText("김건강")).toBeInTheDocument();
+    expect(screen.getAllByText("서울대학교병원").length).toBeGreaterThan(0);
+    expect(screen.queryByText("폐암 치료 체크리스트")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("scr-004-act-02")).toHaveLength(2);
+    for (const result of screen.getAllByTestId("scr-004-act-02")) {
+      expect(result).toHaveAttribute("data-result-type", "directory");
+      expect(within(result).queryByText("ContentItem · free")).not.toBeInTheDocument();
+      expect(within(result).queryByText("커뮤니티 · 김건강")).not.toBeInTheDocument();
+    }
 
-    await user.click(screen.getByTestId("scr-004-act-02"));
+    await user.click(screen.getAllByTestId("scr-004-act-02")[0]);
 
     expect(
-      screen.getByText("서울대학교병원 결과를 선택했습니다."),
+      screen.getByText("김건강 결과를 선택했습니다."),
     ).toBeInTheDocument();
   });
 
@@ -85,7 +97,7 @@ describe("SCR-004 integrated search", () => {
 
     await user.clear(queryInput);
     await user.type(queryInput, "폐암");
-    expect(await screen.findByText("김건강")).toBeInTheDocument();
+    expect(await screen.findByText("폐암 치료 체크리스트")).toBeInTheDocument();
 
     await user.clear(queryInput);
     await user.type(queryInput, "감기");
