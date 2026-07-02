@@ -1,6 +1,7 @@
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowUp,
   Bell,
   BookOpen,
   Bookmark,
@@ -27,7 +28,6 @@ import {
   Search,
   Send,
   ShieldCheck,
-  Sparkles,
   Star,
   Stethoscope,
   UserPlus,
@@ -3540,17 +3540,18 @@ function HomeDefaultState({
       </div>
 
       <section className="scr-home-banner" data-field="banner" data-testid="scr-001-fld-01">
-        <span className="scr-home-eyebrow">
-          <Sparkles size={16} aria-hidden="true" />
-          안녕하세요.
-        </span>
-        <h1>어디가 아프세요?</h1>
-        <label className="scr-home-search">
-          <Search size={18} aria-hidden="true" />
-          <span className="sr-only">증상 검색</span>
-          <input placeholder="폐암 수술 잘 하는 의사 찾아줘." type="search" />
-        </label>
-        <p>AI의사찾기는 회원 전용입니다</p>
+        <img className="scr-home-logo" src="/aiga-hero-logo.png" width={120} height={120} alt="AIGA" />
+        <div className="scr-home-greeting">
+          <span>안녕하세요.</span>
+          <h1>어디가 아프세요?</h1>
+        </div>
+        <div className="scr-home-search">
+          <input aria-label="증상 검색" placeholder="폐암 수술 잘 하는 의사 찾아줘." type="search" />
+          <button className="scr-home-search-btn" type="button" aria-label="검색 보내기">
+            <ArrowUp size={16} aria-hidden="true" />
+          </button>
+        </div>
+        <p className="scr-home-hint">AI의사찾기는 회원 전용입니다</p>
       </section>
 
       <section
