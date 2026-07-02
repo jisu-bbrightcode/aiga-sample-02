@@ -1,0 +1,27 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+
+# drizzle
+packages/db/.drizzle/
+
+# misc
+.DS_Store
+*.log
+.vercel
+coverage/
+
+# tool artifacts
+.playwright-mcp/
